@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { sound } from "../utils/sound";
 import { BrandLogo } from "./BrandLogo";
+import { triggerRipple } from "../utils/ripple";
 
 export const Header: React.FC = () => {
   const { 
@@ -28,25 +29,40 @@ export const Header: React.FC = () => {
   } = useApp();
 
   const [soundOn, setSoundOn] = useState<boolean>(sound.isEnabled());
+  const [themeRotating, setThemeRotating] = useState<boolean>(false);
 
-  const handleTabChange = (tab: "workspace" | "import" | "docs") => {
+  const navTabs = [
+    { id: "workspace", label: "工作台", icon: Layers },
+    { id: "import", label: "导入中心", icon: FileUp },
+    { id: "docs", label: "说明与原理", icon: BookOpen },
+  ] as const;
+
+  const activeTabIndex = navTabs.findIndex((t) => t.id === activeTab);
+
+  const handleTabChange = (e: React.MouseEvent<HTMLButtonElement>, tab: "workspace" | "import" | "docs") => {
+    triggerRipple(e);
     sound.playClick();
     setActiveTab(tab);
   };
 
-  const handleToggleSound = () => {
+  const handleToggleSound = (e: React.MouseEvent<HTMLButtonElement>) => {
+    triggerRipple(e);
     const next = !soundOn;
     sound.setEnabled(next);
     setSoundOn(next);
     if (next) sound.playPop();
   };
 
-  const handleToggleTheme = () => {
+  const handleToggleTheme = (e: React.MouseEvent<HTMLButtonElement>) => {
+    triggerRipple(e);
     sound.playClick();
+    setThemeRotating(true);
+    setTimeout(() => setThemeRotating(false), 500);
     toggleTheme();
   };
 
-  const handleToggleLive = () => {
+  const handleToggleLive = (e: React.MouseEvent<HTMLButtonElement>) => {
+    triggerRipple(e);
     sound.playPop();
     toggleLiveListening();
   };
@@ -75,56 +91,46 @@ export const Header: React.FC = () => {
         </div>
       </div>
 
-      {/* Center: Segmented Navigation */}
-      <nav className="flex items-center p-0.5 rounded-lg bg-neutral-100 dark:bg-neutral-900/80 border border-black/[0.04] dark:border-white/[0.06] shrink-0">
-        <button
-          onClick={() => handleTabChange("workspace")}
-          className={`flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-            activeTab === "workspace"
-              ? "bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 shadow-xs"
-              : "text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200"
-          }`}
-          title="工作台"
-        >
-          <Layers className="w-3.5 h-3.5 stroke-[1.75]" />
-          <span className="hidden sm:inline">工作台</span>
-        </button>
+      {/* Center: Sliding Glider Segmented Control */}
+      <nav className="relative flex items-center p-0.5 rounded-lg bg-neutral-100 dark:bg-neutral-900/80 border border-black/[0.04] dark:border-white/[0.06] shrink-0">
+        {/* Dynamic Sliding Pill Indicator */}
+        <div
+          className="absolute top-0.5 bottom-0.5 rounded-md bg-white dark:bg-neutral-800 shadow-xs border border-black/[0.04] dark:border-white/[0.08] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none"
+          style={{
+            left: `calc(${activeTabIndex * 33.333}% + 2px)`,
+            width: `calc(33.333% - 4px)`
+          }}
+        />
 
-        <button
-          onClick={() => handleTabChange("import")}
-          className={`flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-            activeTab === "import"
-              ? "bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 shadow-xs"
-              : "text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200"
-          }`}
-          title="导入中心"
-        >
-          <FileUp className="w-3.5 h-3.5 stroke-[1.75]" />
-          <span className="hidden sm:inline">导入中心</span>
-        </button>
-
-        <button
-          onClick={() => handleTabChange("docs")}
-          className={`flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-            activeTab === "docs"
-              ? "bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 shadow-xs"
-              : "text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200"
-          }`}
-          title="说明与原理"
-        >
-          <BookOpen className="w-3.5 h-3.5 stroke-[1.75]" />
-          <span className="hidden sm:inline">说明与原理</span>
-        </button>
+        {navTabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={(e) => handleTabChange(e, tab.id)}
+              className={`relative z-10 flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors duration-200 ${
+                isActive
+                  ? "text-neutral-900 dark:text-neutral-100 font-semibold"
+                  : "text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200"
+              }`}
+              title={tab.label}
+            >
+              <Icon className="w-3.5 h-3.5 stroke-[1.75]" />
+              <span className="hidden sm:inline">{tab.label}</span>
+            </button>
+          );
+        })}
       </nav>
 
       {/* Right: Actions, Command Palette, Theme, Settings */}
       <div className="flex items-center gap-1.5 sm:gap-2">
-        {/* Live Screen OCR toggle with pulsating radar */}
+        {/* Live Screen OCR toggle with active radar pulse */}
         <button
           onClick={handleToggleLive}
           className={`hidden md:flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-all ${
             isLiveListening
-              ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.15)]"
+              ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.25)] animate-pulseHalo"
               : "bg-neutral-50 dark:bg-neutral-900/60 border-black/[0.06] dark:border-white/[0.08] text-neutral-600 dark:text-neutral-400 hover:border-black/[0.12] dark:hover:border-white/[0.16]"
           }`}
           title="绑定当前微信/QQ聊天窗口九点遮挡检测"
@@ -138,9 +144,10 @@ export const Header: React.FC = () => {
           <span>{isLiveListening ? "实时监听中" : "启动屏幕 OCR"}</span>
         </button>
 
-        {/* Command Palette Trigger */}
+        {/* Command Palette Trigger with Ripple */}
         <button
-          onClick={() => {
+          onClick={(e) => {
+            triggerRipple(e);
             sound.playPop();
             setCommandPaletteOpen(true);
           }}
@@ -153,37 +160,40 @@ export const Header: React.FC = () => {
           </kbd>
         </button>
 
-        {/* Audio Haptics Toggle */}
+        {/* Audio Haptics Toggle with Ripple */}
         <button
           onClick={handleToggleSound}
           aria-label={soundOn ? "静音音效" : "开启音效反馈"}
           title={soundOn ? "触感微音效已开启（点击静音）" : "微音效已静音（点击开启）"}
-          className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+          className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
             soundOn
-              ? "text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10"
-              : "text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+              ? "text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 active:scale-90"
+              : "text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 active:scale-90"
           }`}
         >
           {soundOn ? <Volume2 className="w-4 h-4 stroke-[1.75]" /> : <VolumeX className="w-4 h-4 stroke-[1.75]" />}
         </button>
 
-        {/* Theme Toggle */}
+        {/* Theme Toggle with 360° Spring Spin */}
         <button
           onClick={handleToggleTheme}
           aria-label="切换色彩模式"
-          className="w-8 h-8 rounded-lg flex items-center justify-center text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+          className="w-8 h-8 rounded-lg flex items-center justify-center text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 active:scale-90 transition-all"
         >
-          {theme === "dark" ? <Sun className="w-4 h-4 stroke-[1.75]" /> : <Moon className="w-4 h-4 stroke-[1.75]" />}
+          <div className={`transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${themeRotating ? "rotate-180 scale-125" : "rotate-0 scale-100"}`}>
+            {theme === "dark" ? <Sun className="w-4 h-4 stroke-[1.75]" /> : <Moon className="w-4 h-4 stroke-[1.75]" />}
+          </div>
         </button>
 
         {/* Settings Button */}
         <button
-          onClick={() => {
+          onClick={(e) => {
+            triggerRipple(e);
             sound.playClick();
             setSettingsOpen(true);
           }}
           aria-label="打开设置"
-          className="w-8 h-8 rounded-lg flex items-center justify-center text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+          className="w-8 h-8 rounded-lg flex items-center justify-center text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 active:scale-90 transition-all"
         >
           <Settings className="w-4 h-4 stroke-[1.75]" />
         </button>

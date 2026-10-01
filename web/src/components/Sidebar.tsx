@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useLayoutEffect } from "react";
 import { useApp } from "../context/AppContext";
 import { 
   Users, 
@@ -9,6 +9,7 @@ import {
   AlertCircle 
 } from "lucide-react";
 import { sound } from "../utils/sound";
+import { triggerRipple } from "../utils/ripple";
 
 export const Sidebar: React.FC = () => {
   const { 
@@ -22,6 +23,19 @@ export const Sidebar: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [platformFilter, setPlatformFilter] = useState<string>("all");
 
+  const [gliderStyle, setGliderStyle] = useState({ left: 0, width: 0 });
+  const filterRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
+
+  useLayoutEffect(() => {
+    const el = filterRefs.current[platformFilter];
+    if (el) {
+      setGliderStyle({
+        left: el.offsetLeft,
+        width: el.offsetWidth,
+      });
+    }
+  }, [platformFilter]);
+
   const filteredProfiles = profiles.filter((p) => {
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           p.conversationKey.toLowerCase().includes(searchQuery.toLowerCase());
@@ -29,13 +43,15 @@ export const Sidebar: React.FC = () => {
     return matchesSearch && matchesPlatform;
   });
 
-  const handleSelectProfile = (id: string) => {
+  const handleSelectProfile = (e: React.MouseEvent, id: string) => {
+    triggerRipple(e);
     sound.playClick();
     setActiveProfileId(id);
     setMobileView("chat");
   };
 
-  const handleSelectFilter = (key: string) => {
+  const handleSelectFilter = (e: React.MouseEvent, key: string) => {
+    triggerRipple(e);
     sound.playClick();
     setPlatformFilter(key);
   };
@@ -54,7 +70,8 @@ export const Sidebar: React.FC = () => {
           </div>
 
           <button
-            onClick={() => {
+            onClick={(e) => {
+              triggerRipple(e);
               sound.playClick();
               setImportModalOpen(true);
             }}
@@ -78,16 +95,24 @@ export const Sidebar: React.FC = () => {
           />
         </div>
 
-        {/* Filter Pills */}
-        <div className="flex items-center gap-1">
+        {/* Filter Pills with Sliding Glider */}
+        <div className="relative flex items-center p-0.5 rounded-md bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.06] w-fit">
+          <div
+            className="absolute top-0.5 bottom-0.5 rounded bg-white dark:bg-neutral-800 shadow-2xs transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none"
+            style={{
+              transform: `translateX(${gliderStyle.left}px)`,
+              width: `${gliderStyle.width}px`,
+            }}
+          />
           {["all", "微信", "QQ"].map((key) => (
             <button
               key={key}
-              onClick={() => handleSelectFilter(key)}
-              className={`px-2 py-0.5 rounded text-[11px] font-medium active:scale-95 transition-all ${
+              ref={(el) => { filterRefs.current[key] = el; }}
+              onClick={(e) => handleSelectFilter(e, key)}
+              className={`relative z-10 px-2.5 py-0.5 rounded text-[11px] font-medium transition-colors duration-200 active:scale-95 ${
                 platformFilter === key
-                  ? "bg-neutral-900 dark:bg-white text-white dark:text-neutral-900"
-                  : "text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200"
+                  ? "text-neutral-900 dark:text-white font-semibold"
+                  : "text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200"
               }`}
             >
               {key === "all" ? "全部" : key}
@@ -108,8 +133,8 @@ export const Sidebar: React.FC = () => {
             return (
               <div
                 key={p.id}
-                onClick={() => handleSelectProfile(p.id)}
-                className={`group relative p-2.5 rounded-lg cursor-pointer active:scale-[0.98] transition-all border ${
+                onClick={(e) => handleSelectProfile(e, p.id)}
+                className={`group relative p-2.5 rounded-lg cursor-pointer active:scale-[0.98] transition-all border overflow-hidden ${
                   isActive
                     ? "bg-white dark:bg-neutral-900/95 border-black/[0.08] dark:border-white/[0.12] shadow-xs dark:shadow-[0_0_15px_rgba(99,102,241,0.06)]"
                     : "border-transparent hover:bg-neutral-200/50 dark:hover:bg-neutral-900/40 text-neutral-700 dark:text-neutral-300"

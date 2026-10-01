@@ -1,167 +1,103 @@
 import React, { useState } from "react";
-import confetti from "canvas-confetti";
 import { sound } from "../utils/sound";
+import { triggerRipple } from "../utils/ripple";
 
 export const BrandLogo: React.FC = () => {
   const [isHovered, setIsHovered] = useState(false);
+  const [isPressed, setIsPressed] = useState(false);
 
   const handleClick = (e: React.MouseEvent) => {
+    triggerRipple(e);
     sound.playPop();
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = (rect.left + rect.width / 2) / window.innerWidth;
-    const y = (rect.top + rect.height / 2) / window.innerHeight;
-
-    confetti({
-      particleCount: 24,
-      spread: 50,
-      origin: { x, y },
-      colors: ["#6366f1", "#a855f7", "#10b981", "#38bdf8"],
-      ticks: 120,
-      gravity: 1.2,
-      scalar: 0.85,
-    });
   };
 
   return (
     <div
       onClick={handleClick}
       onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      className="group relative w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer select-none transition-all duration-300 active:scale-90"
-      title="聊有据 · 智能人际动力学引擎 (点击激发灵感)"
+      onMouseLeave={() => {
+        setIsHovered(false);
+        setIsPressed(false);
+      }}
+      onMouseDown={() => setIsPressed(true)}
+      onMouseUp={() => setIsPressed(false)}
+      className={`group relative w-8.5 h-8.5 rounded-[10px] flex items-center justify-center cursor-pointer select-none transition-all duration-200 ${
+        isPressed ? "scale-90" : isHovered ? "scale-105 -translate-y-0.5" : "scale-100"
+      }`}
+      title="聊有据 · 人际沟通科学辅助系统"
     >
-      {/* Dynamic Animated Border Beam Shell */}
-      <div className="absolute inset-0 rounded-xl p-[1px] bg-gradient-to-br from-indigo-500/50 via-purple-500/30 to-emerald-500/40 group-hover:from-indigo-400 group-hover:via-purple-400 group-hover:to-emerald-400 transition-all duration-500 shadow-xs group-hover:shadow-[0_0_16px_rgba(99,102,241,0.35)] overflow-hidden">
-        <div className="w-full h-full rounded-[11px] bg-white/95 dark:bg-[#121216]/95 backdrop-blur-sm" />
-      </div>
+      {/* Outer Glow Halo (Breathes softly on dark mode, intensifies on hover) */}
+      <div
+        className={`absolute -inset-1 rounded-xl bg-gradient-to-r from-indigo-500/30 via-purple-500/25 to-emerald-500/25 blur-md transition-opacity duration-500 ${
+          isHovered ? "opacity-100" : "opacity-40 group-hover:opacity-75"
+        }`}
+      />
 
-      {/* Ambient Pulsing Core Glow */}
-      <div className="absolute inset-1 rounded-lg bg-radial from-indigo-500/20 via-purple-500/10 to-transparent opacity-60 group-hover:opacity-100 transition-opacity duration-300 blur-[2px]" />
+      {/* Main Glass Squircle Container */}
+      <div className="relative w-full h-full rounded-[10px] bg-[#0c0d12] dark:bg-[#090a0f] border border-white/15 dark:border-white/20 shadow-[0_2px_10px_rgba(0,0,0,0.35),inset_0_1px_1px_rgba(255,255,255,0.2)] flex items-center justify-center overflow-hidden">
+        {/* Subtle Diagonal Shimmer Sheen Beam */}
+        <div
+          className={`absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full transition-transform duration-700 ease-out pointer-events-none ${
+            isHovered ? "translate-x-full" : ""
+          }`}
+          style={{ transform: isHovered ? "translateX(150%) skewX(-20deg)" : "translateX(-150%) skewX(-20deg)" }}
+        />
 
-      {/* SVG Motion Canvas */}
-      <svg
-        className="relative z-10 w-6 h-6 overflow-visible"
-        viewBox="0 0 36 36"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <defs>
-          {/* Gradients */}
-          <linearGradient id="logoStarGrad" x1="6" y1="6" x2="30" y2="30" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#6366f1" />
-            <stop offset="0.5" stopColor="#a855f7" />
-            <stop offset="1" stopColor="#38bdf8" />
-          </linearGradient>
+        {/* Ambient Center Glow */}
+        <div className="absolute w-5 h-5 rounded-full bg-indigo-500/25 blur-xs" />
 
-          <linearGradient id="orbitGrad1" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#6366f1" stopOpacity="0.8" />
-            <stop offset="1" stopColor="#a855f7" stopOpacity="0.2" />
-          </linearGradient>
+        {/* Precision Geometric Monogram Glyph (Interlocking Dialogue & Evidence Prisms) */}
+        <svg
+          className="relative z-10 w-5 h-5 transition-transform duration-300 group-hover:scale-105"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <defs>
+            {/* Primary Gradient (Speaker Intent: Indigo -> Violet) */}
+            <linearGradient id="facetPrimary" x1="2" y1="4" x2="16" y2="18" gradientUnits="userSpaceOnUse">
+              <stop stopColor="#6366f1" />
+              <stop offset="1" stopColor="#a855f7" />
+            </linearGradient>
 
-          <linearGradient id="orbitGrad2" x1="36" y1="0" x2="0" y2="36" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#10b981" stopOpacity="0.8" />
-            <stop offset="1" stopColor="#6366f1" stopOpacity="0.2" />
-          </linearGradient>
+            {/* Secondary Gradient (Evidence Insight: Cyan -> Emerald) */}
+            <linearGradient id="facetSecondary" x1="8" y1="6" x2="22" y2="20" gradientUnits="userSpaceOnUse">
+              <stop stopColor="#38bdf8" />
+              <stop offset="1" stopColor="#10b981" />
+            </linearGradient>
 
-          <filter id="glowFilter" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="1.5" result="blur" />
-            <feComposite in="SourceGraphic" in2="blur" operator="over" />
-          </filter>
-        </defs>
+            {/* Center Core Gradient */}
+            <linearGradient id="coreGleam" x1="9" y1="9" x2="15" y2="15" gradientUnits="userSpaceOnUse">
+              <stop stopColor="#ffffff" />
+              <stop offset="1" stopColor="#c7d2fe" />
+            </linearGradient>
+          </defs>
 
-        {/* Outer Orbit Ring (Slow Clockwise Rotation) */}
-        <g className={`origin-center ${isHovered ? "animate-spin-slow [animation-duration:6s]" : "animate-spin-slow"}`}>
-          <circle
-            cx="18"
-            cy="18"
-            r="13.5"
-            stroke="url(#orbitGrad1)"
-            strokeWidth="1.25"
-            strokeDasharray="3 3.5"
-            className="opacity-70 dark:opacity-85"
-          />
-          {/* Satellite Evidence Node 1 */}
-          <circle
-            cx="18"
-            cy="4.5"
-            r="1.75"
-            fill="#818cf8"
-            filter="url(#glowFilter)"
-            className="animate-pulse"
-          />
-          {/* Satellite Evidence Node 2 */}
-          <circle
-            cx="31.5"
-            cy="18"
-            r="1.25"
-            fill="#a855f7"
-          />
-        </g>
-
-        {/* Inner Counter Orbit Ring (Reverse Rotation) */}
-        <g className={`origin-center ${isHovered ? "animate-spin-reverse-slow [animation-duration:8s]" : "animate-spin-reverse-slow"}`}>
-          <ellipse
-            cx="18"
-            cy="18"
-            rx="10"
-            ry="9"
-            stroke="url(#orbitGrad2)"
-            strokeWidth="1"
-            strokeDasharray="2 3"
-            className="opacity-50 dark:opacity-75"
-          />
-          {/* Inner Signal Node (Emerald boundary protector) */}
-          <circle
-            cx="18"
-            cy="27"
-            r="1.5"
-            fill="#10b981"
-            filter="url(#glowFilter)"
-          />
-        </g>
-
-        {/* Center Radiant Diamond Gem Star */}
-        <g className="origin-center animate-logoStarPulse">
-          {/* Radiant 4-Point Star Core */}
+          {/* Facet A: Left Conversation Aperture Arc */}
           <path
-            d="M 18 8 Q 18 18 8 18 Q 18 18 18 28 Q 18 18 28 18 Q 18 18 18 8 Z"
-            fill="url(#logoStarGrad)"
-            filter="url(#glowFilter)"
-            className="transition-transform group-hover:scale-110"
+            d="M 5 12 C 5 7.5 8.5 4 13 4 C 15.5 4 17.5 5.2 18.5 7 L 13.5 12 L 8 12 C 6.3 12 5 13.3 5 15 Z"
+            fill="url(#facetPrimary)"
+            className="opacity-95 transition-opacity duration-300"
           />
 
-          {/* Central Bright Diamond Core */}
-          <circle
-            cx="18"
-            cy="18"
-            r="2"
-            fill="#ffffff"
-            className="opacity-95"
+          {/* Facet B: Right Evidence Aperture Arc (Interlocking) */}
+          <path
+            d="M 19 12 C 19 16.5 15.5 20 11 20 C 8.5 20 6.5 18.8 5.5 17 L 10.5 12 L 16 12 C 17.7 12 19 10.7 19 9 Z"
+            fill="url(#facetSecondary)"
+            className="opacity-90 mix-blend-screen transition-opacity duration-300"
           />
 
-          {/* Diagonal Micro-Cross Flares */}
-          <line
-            x1="14"
-            y1="14"
-            x2="22"
-            y2="22"
-            stroke="#ffffff"
-            strokeWidth="0.75"
-            strokeLinecap="round"
-            className="opacity-60"
+          {/* Center Nexus: Precision 4-Point Prismatic Diamond Star */}
+          <path
+            d="M 12 7.5 Q 12 12 7.5 12 Q 12 12 12 16.5 Q 12 12 16.5 12 Q 12 12 12 7.5 Z"
+            fill="url(#coreGleam)"
+            className="drop-shadow-[0_0_4px_rgba(255,255,255,0.8)]"
           />
-          <line
-            x1="22"
-            y1="14"
-            x2="14"
-            y2="22"
-            stroke="#ffffff"
-            strokeWidth="0.75"
-            strokeLinecap="round"
-            className="opacity-60"
-          />
-        </g>
-      </svg>
+
+          {/* Micro Center Node */}
+          <circle cx="12" cy="12" r="1.25" fill="#ffffff" />
+        </svg>
+      </div>
     </div>
   );
 };

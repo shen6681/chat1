@@ -11,6 +11,7 @@ import {
   Database
 } from "lucide-react";
 import { sound } from "../utils/sound";
+import { triggerRipple } from "../utils/ripple";
 
 export const SettingsModal: React.FC = () => {
   const { 
@@ -33,12 +34,14 @@ export const SettingsModal: React.FC = () => {
 
   if (!settingsOpen) return null;
 
-  const handleTabChange = (tab: "api" | "security" | "appearance") => {
+  const handleTabChange = (e: React.MouseEvent, tab: "api" | "security" | "appearance") => {
+    triggerRipple(e);
     sound.playClick();
     setActiveTab(tab);
   };
 
-  const handleSave = () => {
+  const handleSave = (e: React.MouseEvent) => {
+    triggerRipple(e);
     sound.playSuccess();
     updateSettings({
       chatKey,
@@ -51,7 +54,8 @@ export const SettingsModal: React.FC = () => {
     setSettingsOpen(false);
   };
 
-  const handleTestConnection = () => {
+  const handleTestConnection = (e: React.MouseEvent) => {
+    triggerRipple(e);
     sound.playPop();
     setTestingConnection(true);
     setTimeout(() => {
@@ -85,8 +89,8 @@ export const SettingsModal: React.FC = () => {
         {/* Tab Switcher */}
         <div className="flex items-center px-6 border-b border-black/[0.06] dark:border-white/[0.08] gap-6 text-xs font-medium text-neutral-500">
           <button
-            onClick={() => handleTabChange("api")}
-            className={`py-3 flex items-center gap-1.5 border-b-2 transition-all ${
+            onClick={(e) => handleTabChange(e, "api")}
+            className={`py-3 flex items-center gap-1.5 border-b-2 transition-all active:scale-95 ${
               activeTab === "api"
                 ? "border-indigo-500 text-indigo-600 dark:text-indigo-400 font-semibold"
                 : "border-transparent hover:text-neutral-900 dark:hover:text-neutral-100"
@@ -97,8 +101,8 @@ export const SettingsModal: React.FC = () => {
           </button>
 
           <button
-            onClick={() => handleTabChange("security")}
-            className={`py-3 flex items-center gap-1.5 border-b-2 transition-all ${
+            onClick={(e) => handleTabChange(e, "security")}
+            className={`py-3 flex items-center gap-1.5 border-b-2 transition-all active:scale-95 ${
               activeTab === "security"
                 ? "border-indigo-500 text-indigo-600 dark:text-indigo-400 font-semibold"
                 : "border-transparent hover:text-neutral-900 dark:hover:text-neutral-100"
@@ -109,8 +113,8 @@ export const SettingsModal: React.FC = () => {
           </button>
 
           <button
-            onClick={() => handleTabChange("appearance")}
-            className={`py-3 flex items-center gap-1.5 border-b-2 transition-all ${
+            onClick={(e) => handleTabChange(e, "appearance")}
+            className={`py-3 flex items-center gap-1.5 border-b-2 transition-all active:scale-95 ${
               activeTab === "appearance"
                 ? "border-indigo-500 text-indigo-600 dark:text-indigo-400 font-semibold"
                 : "border-transparent hover:text-neutral-900 dark:hover:text-neutral-100"
@@ -244,11 +248,11 @@ export const SettingsModal: React.FC = () => {
               {/* Test Button */}
               <button
                 type="button"
-                onClick={handleTestConnection}
+                onClick={(e) => handleTestConnection(e)}
                 disabled={testingConnection}
-                className="px-4 py-2 rounded-lg border border-black/[0.1] dark:border-white/[0.1] text-xs font-medium hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all flex items-center gap-1.5"
+                className="btn-sheen px-4 py-2 rounded-lg border border-black/[0.1] dark:border-white/[0.1] text-xs font-medium hover:bg-neutral-100 dark:hover:bg-neutral-800 active:scale-95 transition-all flex items-center gap-1.5"
               >
-                <RefreshCw className={`w-3.5 h-3.5 ${testingConnection ? "animate-spin" : ""}`} />
+                <RefreshCw className={`w-3.5 h-3.5 ${testingConnection ? "animate-spin text-indigo-500" : ""}`} />
                 <span>测试接口连通性 (发送合成测试包)</span>
               </button>
             </div>
@@ -349,7 +353,7 @@ export const SettingsModal: React.FC = () => {
             取消
           </button>
           <button
-            onClick={handleSave}
+            onClick={(e) => handleSave(e)}
             className="btn-sheen px-5 py-2 rounded-lg bg-indigo-600 text-white font-medium text-xs hover:bg-indigo-500 active:scale-95 transition-all shadow-[0_0_15px_rgba(99,102,241,0.3)] hover:shadow-[0_0_20px_rgba(99,102,241,0.5)]"
           >
             保存并应用

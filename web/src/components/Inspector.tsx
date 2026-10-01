@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useApp } from "../context/AppContext";
 import { 
   Copy, 
@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { sound } from "../utils/sound";
+import { triggerRipple } from "../utils/ripple";
 
 export const Inspector: React.FC = () => {
   const { 
@@ -27,6 +28,29 @@ export const Inspector: React.FC = () => {
 
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [dimensionsExpanded, setDimensionsExpanded] = useState<boolean>(true);
+  const [displayScore, setDisplayScore] = useState<number | null>(analysis?.overallScore ?? null);
+
+  useEffect(() => {
+    if (!analysis || analysis.overallScore === null) {
+      setDisplayScore(null);
+      return;
+    }
+    let current = 0;
+    const target = analysis.overallScore;
+    const totalSteps = 20;
+    const increment = target / totalSteps;
+    const timer = setInterval(() => {
+      current += increment;
+      if (current >= target) {
+        setDisplayScore(target);
+        clearInterval(timer);
+      } else {
+        setDisplayScore(Math.round(current));
+      }
+    }, 20);
+
+    return () => clearInterval(timer);
+  }, [analysis?.overallScore]);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -36,7 +60,8 @@ export const Inspector: React.FC = () => {
     e.currentTarget.style.setProperty("--mouse-y", `${y}px`);
   };
 
-  const handleCopy = (text: string, index: number) => {
+  const handleCopy = (e: React.MouseEvent<HTMLButtonElement>, text: string, index: number) => {
+    triggerRipple(e);
     sound.playSuccess();
     navigator.clipboard.writeText(text);
     setCopiedIndex(index);
@@ -50,7 +75,8 @@ export const Inspector: React.FC = () => {
     setTimeout(() => setCopiedIndex(null), 2000);
   };
 
-  const handleApplyToChat = (text: string) => {
+  const handleApplyToChat = (e: React.MouseEvent<HTMLButtonElement>, text: string) => {
+    triggerRipple(e);
     sound.playPop();
     sendMessage(text, "我");
     showToast("已将此回复采纳为我方最新发言");
@@ -160,7 +186,7 @@ export const Inspector: React.FC = () => {
 
                     <div className="flex items-center gap-1">
                       <button
-                        onClick={() => handleCopy(reply.text, idx)}
+                        onClick={(e) => handleCopy(e, reply.text, idx)}
                         className={`p-1.5 rounded-md text-xs font-medium active:scale-90 transition-all flex items-center gap-1 ${
                           isCopied
                             ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
@@ -168,12 +194,18 @@ export const Inspector: React.FC = () => {
                         }`}
                         title="复制到剪贴板"
                       >
-                        {isCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                        {isCopied ? (
+                          <span className="scale-110 text-emerald-500 transition-transform">
+                            <Check className="w-3.5 h-3.5" />
+                          </span>
+                        ) : (
+                          <Copy className="w-3.5 h-3.5" />
+                        )}
                         <span className="text-[10px]">{isCopied ? "已复制" : "复制"}</span>
                       </button>
 
                       <button
-                        onClick={() => handleApplyToChat(reply.text)}
+                        onClick={(e) => handleApplyToChat(e, reply.text)}
                         className="p-1.5 rounded-md text-neutral-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 active:scale-90 transition-all"
                         title="作为我方回复发送"
                       >
@@ -211,15 +243,15 @@ export const Inspector: React.FC = () => {
                   六维互动积极度
                 </span>
                 <span className="relative flex items-center">
-                  <span className="font-mono text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 shadow-[0_0_10px_rgba(16,185,129,0.18)]">
-                    {analysis.overallScore !== null ? `${analysis.overallScore} / 100` : "证据不足"}
+                  <span className="font-mono text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 shadow-[0_0_10px_rgba(16,185,129,0.18)] transition-all">
+                    {displayScore !== null ? `${displayScore} / 100` : "证据不足"}
                   </span>
                 </span>
               </div>
               <p className="text-[10px] text-neutral-400">基于 FerryCorleone 人际动力学加权聚合</p>
             </div>
 
-            <button className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200">
+            <button className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 active:scale-90 transition-transform">
               {dimensionsExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
             </button>
           </div>

@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import type { ContactProfile, MessageItem } from "../types";
 import { sound } from "../utils/sound";
+import { triggerRipple } from "../utils/ripple";
 
 export const ImportHub: React.FC = () => {
   const { importProfile, showToast } = useApp();
@@ -21,7 +22,8 @@ export const ImportHub: React.FC = () => {
   const [selfChoice, setSelfChoice] = useState<string>("我 (User_01)");
   const [previewCount, setPreviewCount] = useState<number>(142);
 
-  const handleLoadDemoFile = () => {
+  const handleLoadDemoFile = (e: React.MouseEvent) => {
+    triggerRipple(e);
     sound.playPop();
     setImportedName("沈念 (微信记录)");
     setDetectedSpeakers(["沈念 (Shen)", "我"]);
@@ -31,7 +33,8 @@ export const ImportHub: React.FC = () => {
     showToast("已成功解析微信导出文件，请确认双方发言人身份");
   };
 
-  const handleFinishImport = () => {
+  const handleFinishImport = (e: React.MouseEvent) => {
+    triggerRipple(e);
     sound.playSuccess();
     const newProfile: ContactProfile = {
       id: "p_" + Date.now(),
@@ -147,11 +150,12 @@ export const ImportHub: React.FC = () => {
               ].map((fmt) => (
                 <div
                   key={fmt.id}
-                  onClick={() => {
+                  onClick={(e) => {
+                    triggerRipple(e);
                     sound.playClick();
                     setSelectedSource(fmt.id);
                   }}
-                  className={`p-4 rounded-xl border cursor-pointer transition-all space-y-1.5 ${
+                  className={`p-4 rounded-xl border cursor-pointer active:scale-[0.98] transition-all space-y-1.5 overflow-hidden ${
                     selectedSource === fmt.id
                       ? "bg-white dark:bg-neutral-900 border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.15)] ring-1 ring-indigo-500/30"
                       : "bg-neutral-100/50 dark:bg-neutral-900/40 border-black/[0.06] dark:border-white/[0.06] hover:border-black/[0.12] dark:hover:border-white/[0.12]"
@@ -187,7 +191,7 @@ export const ImportHub: React.FC = () => {
 
               <div className="pt-2 flex items-center justify-center gap-3">
                 <button
-                  onClick={handleLoadDemoFile}
+                  onClick={(e) => handleLoadDemoFile(e)}
                   className="btn-sheen px-4 py-2 rounded-lg bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-medium text-xs hover:bg-neutral-800 dark:hover:bg-neutral-100 active:scale-95 transition-all shadow-[0_0_15px_rgba(99,102,241,0.2)] flex items-center gap-1.5"
                 >
                   <Sparkles className="w-3.5 h-3.5 text-indigo-400 dark:text-indigo-600" />
@@ -231,11 +235,12 @@ export const ImportHub: React.FC = () => {
                   {detectedSpeakers.map((spk) => (
                     <div
                       key={spk}
-                      onClick={() => {
+                      onClick={(e) => {
+                        triggerRipple(e);
                         sound.playClick();
                         setSelfChoice(spk);
                       }}
-                      className={`p-3.5 rounded-xl border cursor-pointer active:scale-[0.98] transition-all flex items-center justify-between ${
+                      className={`p-3.5 rounded-xl border cursor-pointer active:scale-[0.98] transition-all flex items-center justify-between overflow-hidden ${
                         selfChoice === spk
                           ? "bg-indigo-50/60 dark:bg-indigo-950/40 border-indigo-500 shadow-xs"
                           : "bg-neutral-50 dark:bg-neutral-800/60 border-black/[0.06] dark:border-white/[0.08]"
@@ -259,7 +264,8 @@ export const ImportHub: React.FC = () => {
             {/* Navigation Actions */}
             <div className="flex items-center justify-between pt-4 border-t border-black/[0.05] dark:border-white/[0.06]">
               <button
-                onClick={() => {
+                onClick={(e) => {
+                  triggerRipple(e);
                   sound.playClick();
                   setStep(1);
                 }}
@@ -269,7 +275,7 @@ export const ImportHub: React.FC = () => {
               </button>
 
               <button
-                onClick={handleFinishImport}
+                onClick={(e) => handleFinishImport(e)}
                 className="btn-sheen px-5 py-2 rounded-lg bg-indigo-600 text-white font-medium text-xs hover:bg-indigo-500 active:scale-95 transition-all shadow-[0_0_15px_rgba(99,102,241,0.3)] hover:shadow-[0_0_20px_rgba(99,102,241,0.5)] flex items-center gap-1.5"
               >
                 <span>保存并进入工作台</span>

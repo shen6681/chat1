@@ -11,6 +11,7 @@ import {
   Radio 
 } from "lucide-react";
 import { sound } from "../utils/sound";
+import { triggerRipple } from "../utils/ripple";
 
 export const CommandPalette: React.FC = () => {
   const {
@@ -182,12 +183,13 @@ export const CommandPalette: React.FC = () => {
               return (
                 <div
                   key={item.id}
-                  onClick={() => {
+                  onClick={(e) => {
+                    triggerRipple(e);
                     sound.playSuccess();
                     item.action();
                   }}
                   onMouseEnter={() => setSelectedIndex(idx)}
-                  className={`flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer active:scale-[0.98] transition-all ${
+                  className={`flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer active:scale-[0.98] transition-all overflow-hidden ${
                     isSelected
                       ? "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 shadow-xs"
                       : "text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800/60"

@@ -10,6 +10,7 @@ import {
   User 
 } from "lucide-react";
 import { sound } from "../utils/sound";
+import { triggerRipple } from "../utils/ripple";
 
 export const ChatTimeline: React.FC = () => {
   const { 
@@ -26,31 +27,46 @@ export const ChatTimeline: React.FC = () => {
   const [inputVal, setInputVal] = useState("");
   const [inputSpeaker, setInputSpeaker] = useState<"我" | "对方">("对方");
   const [filterRating, setFilterRating] = useState<"all" | "scored" | "other">("all");
+  const [isSending, setIsSending] = useState<boolean>(false);
+
+  const filterOptions = [
+    { id: "all", label: "全部" },
+    { id: "other", label: "仅看对方" },
+    { id: "scored", label: "已评分" },
+  ] as const;
+
+  const activeFilterIndex = filterOptions.findIndex((f) => f.id === filterRating);
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputVal.trim()) return;
+    setIsSending(true);
     sound.playPop();
     sendMessage(inputVal, inputSpeaker);
     setInputVal("");
+    setTimeout(() => setIsSending(false), 300);
   };
 
-  const handleSelectMessage = (id: string | number) => {
+  const handleSelectMessage = (e: React.MouseEvent<HTMLElement>, id: string | number) => {
+    triggerRipple(e);
     sound.playClick();
     setSelectedMessageId(id);
   };
 
-  const handleFilterChange = (filter: "all" | "scored" | "other") => {
+  const handleFilterChange = (e: React.MouseEvent<HTMLButtonElement>, filter: "all" | "scored" | "other") => {
+    triggerRipple(e);
     sound.playClick();
     setFilterRating(filter);
   };
 
-  const handleBatchAnalyzeWithSound = () => {
+  const handleBatchAnalyzeWithSound = (e: React.MouseEvent<HTMLButtonElement>) => {
+    triggerRipple(e);
     sound.playClick();
     triggerBatchAnalyze();
   };
 
-  const handleExportMarkdown = () => {
+  const handleExportMarkdown = (e: React.MouseEvent<HTMLButtonElement>) => {
+    triggerRipple(e);
     if (!activeProfile || messages.length === 0) {
       showToast("当前暂无对话记录可导出", "warning");
       return;
@@ -123,38 +139,33 @@ export const ChatTimeline: React.FC = () => {
 
         {/* Filter & Action Buttons */}
         <div className="flex items-center gap-2">
-          {/* Filter Pills */}
-          <div className="hidden lg:flex items-center gap-1 p-0.5 rounded-md bg-neutral-100 dark:bg-neutral-900 border border-black/[0.04] dark:border-white/[0.06]">
-            <button
-              onClick={() => handleFilterChange("all")}
-              className={`px-2 py-0.5 rounded text-[11px] font-medium active:scale-95 transition-all ${
-                filterRating === "all"
-                  ? "bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 shadow-xs"
-                  : "text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200"
-              }`}
-            >
-              全部
-            </button>
-            <button
-              onClick={() => handleFilterChange("other")}
-              className={`px-2 py-0.5 rounded text-[11px] font-medium active:scale-95 transition-all ${
-                filterRating === "other"
-                  ? "bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 shadow-xs"
-                  : "text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200"
-              }`}
-            >
-              仅看对方
-            </button>
-            <button
-              onClick={() => handleFilterChange("scored")}
-              className={`px-2 py-0.5 rounded text-[11px] font-medium active:scale-95 transition-all ${
-                filterRating === "scored"
-                  ? "bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 shadow-xs"
-                  : "text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200"
-              }`}
-            >
-              已评分
-            </button>
+          {/* Dynamic Sliding Filter Glider */}
+          <div className="hidden lg:flex relative items-center p-0.5 rounded-md bg-neutral-100 dark:bg-neutral-900 border border-black/[0.04] dark:border-white/[0.06] shrink-0">
+            {/* Sliding Pill Indicator */}
+            <div
+              className="absolute top-0.5 bottom-0.5 rounded bg-white dark:bg-neutral-800 shadow-2xs border border-black/[0.04] dark:border-white/[0.08] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none"
+              style={{
+                left: `calc(${activeFilterIndex * 33.333}% + 2px)`,
+                width: `calc(33.333% - 4px)`
+              }}
+            />
+
+            {filterOptions.map((opt) => {
+              const isActive = filterRating === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  onClick={(e) => handleFilterChange(e, opt.id)}
+                  className={`relative z-10 px-2.5 py-0.5 rounded text-[11px] font-medium transition-colors duration-200 active:scale-95 ${
+                    isActive
+                      ? "text-neutral-900 dark:text-neutral-100 font-semibold"
+                      : "text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
           </div>
 
           {/* Trigger Batch Analyze */}
@@ -197,7 +208,7 @@ export const ChatTimeline: React.FC = () => {
             return (
               <div
                 key={m.id}
-                onClick={() => handleSelectMessage(m.id)}
+                onClick={(e) => handleSelectMessage(e, m.id)}
                 className={`flex flex-col group cursor-pointer transition-all ${
                   isMe ? "items-end" : "items-start"
                 }`}
@@ -209,9 +220,9 @@ export const ChatTimeline: React.FC = () => {
                   <span>{m.timestamp.slice(11, 16)}</span>
                 </div>
 
-                {/* Bubble Container with focus glow */}
+                {/* Bubble Container with focus glow & active bounce */}
                 <div
-                  className={`relative max-w-[85%] sm:max-w-[75%] p-3.5 rounded-xl text-xs sm:text-sm leading-relaxed transition-all border ${
+                  className={`relative max-w-[85%] sm:max-w-[75%] p-3.5 rounded-xl text-xs sm:text-sm leading-relaxed transition-all border active:scale-[0.99] ${
                     isSelected
                       ? "bg-indigo-50/80 dark:bg-indigo-950/50 border-indigo-500 text-neutral-900 dark:text-neutral-100 ring-2 ring-indigo-500/50 shadow-[0_0_18px_rgba(99,102,241,0.22)]"
                       : isMe
@@ -287,7 +298,8 @@ export const ChatTimeline: React.FC = () => {
           {/* Speaker switcher */}
           <button
             type="button"
-            onClick={() => {
+            onClick={(e) => {
+              triggerRipple(e);
               sound.playClick();
               setInputSpeaker((prev) => (prev === "对方" ? "我" : "对方"));
             }}
@@ -325,9 +337,9 @@ export const ChatTimeline: React.FC = () => {
           <button
             type="submit"
             disabled={!inputVal.trim()}
-            className="btn-sheen px-3.5 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-500 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed shrink-0 flex items-center gap-1 text-xs font-medium shadow-[0_0_15px_rgba(99,102,241,0.3)] hover:shadow-[0_0_20px_rgba(99,102,241,0.5)]"
+            className="btn-sheen px-3.5 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-500 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed shrink-0 flex items-center gap-1.5 text-xs font-medium shadow-[0_0_15px_rgba(99,102,241,0.3)] hover:shadow-[0_0_20px_rgba(99,102,241,0.5)]"
           >
-            <Send className="w-3.5 h-3.5" />
+            <Send className={`w-3.5 h-3.5 transition-transform duration-300 ${isSending ? "translate-x-1.5 -translate-y-1.5 scale-125" : ""}`} />
             <span className="hidden sm:inline">录入语境</span>
           </button>
         </form>
