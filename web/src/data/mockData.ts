@@ -4,19 +4,19 @@ export const INITIAL_SETTINGS: SettingsConfig = {
   mode: "Jev + DeepSeek",
   chatUrl: "https://api.deepseek.com",
   chatModel: "deepseek-flash",
-  chatKey: "sk-••••••••••••••••••••••••3a9f",
+  chatKey: "",
   jevUrl: "https://api.typesafe.ai",
   jevModel: "jev-latest",
-  jevKey: "jev-••••••••••••••••••••••••7b21",
+  jevKey: "",
   rememberKeys: true,
   useDpapi: true,
   autoAnalyze: true,
   interval: 2.0,
   cooldown: 8.0,
   fontSize: "default",
-  theme: "dark",
+  theme: "light",
   reducedMotion: false,
-  hapticSound: true,
+  hapticSound: false,
 };
 
 export const MOCK_PROFILES: ContactProfile[] = [

@@ -72,3 +72,9 @@ Exact pinned commits, original download URLs and SHA256 values are in fonts/prov
 each font's complete original OFL copyright and license text is beside it as *-OFL.txt.
 Fonts are loaded privately for the running application, with no system installation.
 The application's MIT license does not replace the OFL font licenses.
+
+Browser interface based on the repository UI branch contributed by Yangfan Hu.
+React / React DOM, lucide-react, canvas-confetti, clsx, tailwind-merge and Tailwind CSS
+retain their MIT licenses under web/licenses in source and licenses/web in the release.
+The frontend uses the existing pinned package-lock.json; development dependencies
+are not required to launch the portable program.

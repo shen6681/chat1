@@ -20,7 +20,7 @@ def main():
     if not work.is_relative_to(parent) or work.exists():
         raise ValueError("Unexpected verification target")
     work.mkdir(parents=True)
-    report={"version":"2.6.0","zip":str(ZIP),"synthetic_only":True,"real_api_requests":0}
+    report={"version":"2.7.0","zip":str(ZIP),"synthetic_only":True,"real_api_requests":0}
     try:
         target=work/"解压 验证"
         extract_checked(ZIP,target)

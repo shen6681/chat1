@@ -2,6 +2,23 @@
 
 @variant dark (&:where(.dark, .dark *, [data-theme="dark"], [data-theme="dark"] *));
 
+@font-face { font-family: 'LXGW WenKai Lite'; src: url('/fonts/LXGWWenKaiLite-Regular.ttf'); font-display: swap; }
+@font-face { font-family: 'ZCOOL KuaiLe'; src: url('/fonts/ZCOOLKuaiLe-Regular.ttf'); font-display: swap; }
+@font-face { font-family: 'ZCOOL XiaoWei'; src: url('/fonts/ZCOOLXiaoWei-Regular.ttf'); font-display: swap; }
+@font-face { font-family: 'Ma Shan Zheng'; src: url('/fonts/MaShanZheng-Regular.ttf'); font-display: swap; }
+
+[data-accent='blue'] { --color-indigo-500: #3b7edd; --color-indigo-600: #326ccc; }
+[data-accent='lavender'] { --color-indigo-500: #9980da; --color-indigo-600: #8364cd; }
+[data-accent='sakura'] { --color-indigo-500: #de86a4; --color-indigo-600: #c96587; }
+[data-accent='mint'] { --color-indigo-500: #44a58b; --color-indigo-600: #308b73; }
+[data-accent='sky'] { --color-indigo-500: #56a3d3; --color-indigo-600: #3387ba; }
+[data-accent='peach'] { --color-indigo-500: #d79b66; --color-indigo-600: #bf7b40; }
+[data-surface='cream']:not(.dark) aside, [data-surface='cream']:not(.dark) .chat-feed { background: #faf6ef; }
+[data-surface='mist']:not(.dark) aside, [data-surface='mist']:not(.dark) .chat-feed { background: #f0f4f7; }
+[data-surface='gray']:not(.dark) aside, [data-surface='gray']:not(.dark) .chat-feed { background: #f3f4f6; }
+[data-surface='white']:not(.dark) aside, [data-surface='white']:not(.dark) .chat-feed { background: #fff; }
+[data-motion='reduced'] *, [data-motion='reduced'] *::before, [data-motion='reduced'] *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+
 @layer base {
   :root {
     --background: #f8f9fa;
@@ -326,7 +343,6 @@ input[type="submit"]:active:not(:disabled) {
     box-shadow: 0 0 0 8px rgba(99, 102, 241, 0);
   }
 }
-
 
 
 

@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useApp } from "../context/AppContext";
-import { 
-  Copy, 
-  Check, 
-  Send, 
-  Compass, 
-  BrainCircuit, 
-  ShieldAlert, 
-  Info, 
-  ChevronDown, 
-  ChevronUp, 
-  MessageSquareQuote, 
+import {
+  Copy,
+  Check,
+  Send,
+  Compass,
+  BrainCircuit,
+  ShieldAlert,
+  Info,
+  ChevronDown,
+  ChevronUp,
+  MessageSquareQuote,
   Target,
   Sparkles
 } from "lucide-react";
@@ -19,11 +19,11 @@ import { sound } from "../utils/sound";
 import { triggerRipple } from "../utils/ripple";
 
 export const Inspector: React.FC = () => {
-  const { 
-    analysis, 
-    selectedMessage, 
-    sendMessage, 
-    showToast 
+  const {
+    analysis,
+    selectedMessage,
+    sendMessage,
+    showToast, settings
   } = useApp();
 
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
@@ -37,12 +37,13 @@ export const Inspector: React.FC = () => {
     }
     let current = 0;
     const target = analysis.overallScore;
+    if (settings.reducedMotion) { setDisplayScore(target); return; }
     const totalSteps = 20;
     const increment = target / totalSteps;
     const timer = setInterval(() => {
       current += increment;
       if (current >= target) {
-        setDisplayScore(target);
+    setDisplayScore(target);
         clearInterval(timer);
       } else {
         setDisplayScore(Math.round(current));
@@ -50,7 +51,7 @@ export const Inspector: React.FC = () => {
     }, 20);
 
     return () => clearInterval(timer);
-  }, [analysis?.overallScore]);
+  }, [analysis?.overallScore, settings.reducedMotion]);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -60,10 +61,11 @@ export const Inspector: React.FC = () => {
     e.currentTarget.style.setProperty("--mouse-y", `${y}px`);
   };
 
-  const handleCopy = (e: React.MouseEvent<HTMLButtonElement>, text: string, index: number) => {
+  const handleCopy = async (e: React.MouseEvent<HTMLButtonElement>, text: string, index: number) => {
     triggerRipple(e);
+    try { await navigator.clipboard.writeText(text); }
+    catch { showToast('复制失败，请选中文字手动复制。', 'warning'); return; }
     sound.playSuccess();
-    navigator.clipboard.writeText(text);
     setCopiedIndex(index);
     showToast("建议回复已复制到剪贴板");
     confetti({
@@ -75,11 +77,10 @@ export const Inspector: React.FC = () => {
     setTimeout(() => setCopiedIndex(null), 2000);
   };
 
-  const handleApplyToChat = (e: React.MouseEvent<HTMLButtonElement>, text: string) => {
+  const handleApplyToChat = async (e: React.MouseEvent<HTMLButtonElement>, text: string) => {
     triggerRipple(e);
     sound.playPop();
-    sendMessage(text, "我");
-    showToast("已将此回复采纳为我方最新发言");
+    if (await sendMessage(text, "我")) showToast("已补充到我方存档；请确认这句话实际已经发送。");
   };
 
   const handleToggleDimensions = () => {
@@ -97,7 +98,7 @@ export const Inspector: React.FC = () => {
   }
 
   return (
-    <aside className="w-full lg:w-96 xl:w-[420px] h-[calc(100vh-3.5rem)] flex flex-col border-l border-black/[0.06] dark:border-white/[0.07] bg-neutral-50/70 dark:bg-[#0c0c0e]/70 backdrop-blur-sm overflow-y-auto">
+    <aside className="w-full lg:w-96 xl:w-[420px] h-[calc(100dvh-7rem)] lg:h-[calc(100dvh-3.5rem)] flex flex-col border-l border-black/[0.06] dark:border-white/[0.07] bg-neutral-50/70 dark:bg-[#0c0c0e]/70 backdrop-blur-sm overflow-y-auto">
       {/* Inspector Top Header */}
       <div className="p-4 border-b border-black/[0.05] dark:border-white/[0.06] flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -151,7 +152,7 @@ export const Inspector: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-neutral-900 dark:text-neutral-100">
               <Target className="w-3.5 h-3.5 text-indigo-500" />
-              <span>下一句建议回复 (3 种策略表达)</span>
+              <span>下一句建议回复{analysis.replies.length ? ` (${analysis.replies.length} 种表达)` : ' · 点击“生成下一句建议”'}</span>
             </div>
           </div>
 
@@ -231,11 +232,11 @@ export const Inspector: React.FC = () => {
         </div>
 
         {/* SECTION 2: 六维互动积极度 (6D Relational Dynamics) */}
-        <div 
+        <div
           onMouseMove={handleMouseMove}
           className="spotlight-card p-4 rounded-xl bg-white dark:bg-neutral-900/90 border border-black/[0.07] dark:border-white/[0.08] shadow-xs space-y-3"
         >
-          <div 
+          <div
             onClick={handleToggleDimensions}
             className="flex items-center justify-between cursor-pointer select-none relative z-10"
           >

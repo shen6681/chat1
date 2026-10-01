@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { sound } from "../utils/sound";
 import { triggerRipple } from "../utils/ripple";
+import { api, errorText } from '../utils/api';
 
 export const CommandPalette: React.FC = () => {
   const {
@@ -23,7 +24,7 @@ export const CommandPalette: React.FC = () => {
     toggleTheme,
     setSettingsOpen,
     triggerBatchAnalyze,
-    toggleLiveListening,
+    toggleLiveListening, showToast, setGuideStep,
   } = useApp();
 
   const [query, setQuery] = useState("");
@@ -41,6 +42,8 @@ export const CommandPalette: React.FC = () => {
   }
 
   const items: CommandItem[] = [
+    { id: 'guide', title: '重新查看新手指南', subtitle: '导入、选择日期、评分与解释', icon: <BookOpen className="w-4 h-4" />, group: '帮助与退出', action: () => { setCommandPaletteOpen(false); setGuideStep(0); } },
+    { id: 'quit', title: '退出程序', subtitle: '停止本机服务；正在返回的批次会先保存', icon: <Radio className="w-4 h-4" />, group: '帮助与退出', action: async () => { try { await api('/api/quit', {}); setCommandPaletteOpen(false); showToast('正在停止本机服务并保存结果，之后可关闭此页面。', 'info'); } catch (error) { showToast(errorText(error), 'danger'); } } },
     // Contacts
     ...profiles.map((p) => ({
       id: `p_${p.id}`,
@@ -58,7 +61,7 @@ export const CommandPalette: React.FC = () => {
     {
       id: "action_analyze",
       title: "执行当前会话批量分析 (10条/组)",
-      subtitle: "调用 TypeSafe Jev & DeepSeek 模型进行原子评分",
+      subtitle: "使用所选评分模型，每10条原子保存；DeepSeek解释需主动请求",
       icon: <Sparkles className="w-4 h-4 text-indigo-400" />,
       action: () => {
         triggerBatchAnalyze();
@@ -68,8 +71,8 @@ export const CommandPalette: React.FC = () => {
     },
     {
       id: "action_ocr",
-      title: "开启 / 暂停屏幕实时 OCR 监听",
-      subtitle: "Win32 九点采样防遮挡监控",
+      title: "打开屏幕读取与导出工具工作台",
+      subtitle: "在实际工作台中框选聊天区域并开始读取",
       icon: <Radio className="w-4 h-4 text-emerald-500" />,
       action: () => {
         toggleLiveListening();

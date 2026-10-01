@@ -15,6 +15,35 @@ from chat_assistant.weflow import WeFlowClient
 
 
 class ImportTests(unittest.TestCase):
+    def test_empty_or_media_only_conversations_do_not_block_text_neighbours(self):
+        text={'chatlab':{},'meta':{'name':'文字联系人','ownerId':'self'},'messages':[{'sender':'self','type':0,'content':'你好'},{'sender':'peer','type':0,'content':'在的'}]}
+        empty={'chatlab':{},'messages':[]}
+        media={'chatlab':{},'messages':[{'sender':'peer','type':1,'content':'图片'}]}
+        blocks=[{'_type':'header','chatlab':{},'meta':{'name':'图片联系人'}}, {'_type':'message','sender':'peer','type':1,'content':'图片'},
+                {'_type':'header','chatlab':{},'meta':{'name':'文字联系人','ownerId':'self'}},
+                {'_type':'message','sender':'self','type':0,'content':'你好'}, {'_type':'message','sender':'peer','type':0,'content':'在的'}]
+        for data in ({'sessions':[empty,media,text]},[text,media,empty],blocks):
+            with self.subTest(format=type(data).__name__):
+                bundle=from_json(data)
+                self.assertEqual(len(bundle.conversations),1)
+                self.assertEqual([m.text for m in bundle.conversations[0].messages],['你好','在的'])
+                self.assertEqual([m.speaker for m in bundle.conversations[0].choose_self('self')],['我','对方'])
+
+    def test_multi_conversation_all_empty_or_malformed_still_rejected(self):
+        with self.assertRaises(ValueError):
+            from_json({'sessions':[{'messages':[]},{'chatlab':{},'messages':[{'sender':'peer','type':1,'content':'图片'}]}]})
+        with self.assertRaises(ValueError):
+            from_json({'sessions':[{'messages':'invalid'}, {'messages':[{'sender':'peer','content':'有效文字'}]}]})
+
+    def test_malformed_child_records_are_not_treated_as_media_only(self):
+        valid={'messages':[{'sender':'peer','content':'有效文字'}]}
+        for malformed in ({'messages':[None]}, {'messages':['invalid']}, {'messages':[{}]}, {}, None):
+            with self.subTest(child=malformed):
+                with self.assertRaises(ValueError):
+                    from_json({'sessions':[malformed,valid]})
+        with self.assertRaises(ValueError):
+            from_json([valid,{'messages':['invalid']}])
+
     def test_chatlab_and_explicit_identity(self):
         bundle = from_json({"chatlab": {"version": "0.0.2"}, "meta": {"name": "小林", "type": "private", "ownerId": "10"}, "members": [{"platformId": "10", "accountName": "自己"}], "messages": [{"sender": "20", "timestamp": 100, "type": 0, "content": "最近怎么样", "platformMessageId": "a"}, {"sender": "10", "timestamp": 101, "type": 0, "content": "挺好的"}, {"sender": "20", "timestamp": 102, "type": 1, "content": "照片"}]})
         c = bundle.conversations[0]

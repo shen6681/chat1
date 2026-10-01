@@ -1,91 +1,101 @@
+"""Built collaborator UI with a loopback-only, session-authenticated local API."""
 from __future__ import annotations
 
-import os
+import json
+import secrets
 import sys
-import socket
-import webbrowser
 import threading
-from pathlib import Path
+import webbrowser
+from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+from urllib.parse import parse_qs, urlsplit
+
+from .web_backend import LocalService, VERSION
+
+MAX_BODY = 202 * 1024 * 1024
 
 
 class SPAHandler(SimpleHTTPRequestHandler):
-    """Serve static assets with Single Page Application (SPA) fallback to index.html."""
-
-    def __init__(self, *args, directory=None, **kwargs):
-        super().__init__(*args, directory=directory, **kwargs)
-
-    def do_GET(self):
-        # Strict security: verify requested path cannot escape self.directory
-        path = self.translate_path(self.path)
-        base = Path(self.directory).resolve()
-        target = Path(path).resolve()
-
-        if base not in target.parents and target != base:
-            self.send_error(403, "Access Denied: Path traversal prohibited.")
-            return
-
-        if not target.exists() or target.is_dir():
-            index_path = base / "index.html"
-            if index_path.exists():
-                self.path = "/index.html"
-        return super().do_GET()
-
+    def log_message(self,*args): pass
+    def valid_host(self): return self.headers.get('Host','') in self.server.hosts
+    def authenticated(self):
+        origin = self.headers.get('Origin')
+        return self.valid_host() and (not origin or origin in self.server.origins) and secrets.compare_digest(
+            self.headers.get('X-Chat1-Token',''),self.server.token)
     def end_headers(self):
-        # Security & Performance headers
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("X-Content-Type-Options", "nosniff")
-        self.send_header("X-Frame-Options", "SAMEORIGIN")
-        self.send_header("X-XSS-Protection", "1; mode=block")
-        self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+        self.send_header('Cache-Control','no-store')
+        self.send_header('X-Content-Type-Options','nosniff')
+        self.send_header('X-Frame-Options','DENY')
+        self.send_header('Referrer-Policy','no-referrer')
+        self.send_header('Content-Security-Policy',f"default-src 'self'; script-src 'self' 'nonce-{self.server.token}'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'")
         super().end_headers()
+    def respond(self,data,code=200):
+        raw = json.dumps(data,ensure_ascii=False,allow_nan=False).encode('utf-8')
+        self.send_response(code); self.send_header('Content-Type','application/json; charset=utf-8')
+        self.send_header('Content-Length',str(len(raw))); self.end_headers(); self.wfile.write(raw)
+    def do_GET(self):
+        route = urlsplit(self.path).path
+        if route.startswith('/api/'):
+            if not self.authenticated(): return self.respond({'error':'本机接口验证失败，请从程序打开页面。'},403)
+            try:
+                query = {k:v[-1] for k,v in parse_qs(urlsplit(self.path).query).items()}
+                return self.respond(self.server.service.get(route,query))
+            except Exception as error: return self.respond({'error':self.server.service.safe_error(error)},400)
+        if not self.valid_host(): return self.send_error(403)
+        base = Path(self.directory).resolve(); target = Path(self.translate_path(self.path)).resolve()
+        if not target.is_relative_to(base): return self.send_error(403)
+        if route.startswith('/fonts/'):
+            from .ui_fonts import font_directory
+            folder = font_directory().resolve(); target = (folder/route.rsplit('/',1)[-1]).resolve()
+            if not target.is_relative_to(folder) or target.suffix!='.ttf' or not target.is_file(): return self.send_error(404)
+            raw = target.read_bytes(); self.send_response(200); self.send_header('Content-Type','font/ttf')
+            self.send_header('Content-Length',str(len(raw))); self.end_headers(); self.wfile.write(raw); return
+        if target.is_file() and target.name!='index.html': return super().do_GET()
+        if Path(route).suffix and not route.endswith('index.html'): return self.send_error(404)
+        index = base/'index.html'
+        if not index.is_file(): return self.send_error(503)
+        document = index.read_text(encoding='utf-8')
+        bootstrap = f'<script nonce="{self.server.token}">window.__CHAT1_TOKEN__={json.dumps(self.server.token)};</script>'
+        raw = document.replace('</head>',bootstrap+'</head>').encode('utf-8')
+        self.send_response(200); self.send_header('Content-Type','text/html; charset=utf-8')
+        self.send_header('Content-Length',str(len(raw))); self.end_headers(); self.wfile.write(raw)
+    def do_POST(self):
+        if not self.authenticated(): return self.respond({'error':'本机接口验证失败。'},403)
+        try:
+            size = int(self.headers.get('Content-Length','0'))
+            if size<=0 or size>MAX_BODY: return self.respond({'error':'文件过大或请求内容为空。'},413)
+            if self.headers.get_content_type()!='application/json': return self.respond({'error':'请求格式无效。'},415)
+            body = json.loads(self.rfile.read(size))
+            if not isinstance(body,dict): raise ValueError('请求内容必须为对象。')
+            if urlsplit(self.path).path=='/api/quit':
+                self.respond({'stopping':True})
+                threading.Thread(target=self.server.shutdown,daemon=True).start()
+                return
+            return self.respond(self.server.service.post(urlsplit(self.path).path,body))
+        except Exception as error: return self.respond({'error':self.server.service.safe_error(error)},400)
+    def do_HEAD(self):
+        if not self.valid_host(): return self.send_error(403)
+        self.send_error(405)
 
-    def log_message(self, format, *args):
-        # Suppress routine request spam
-        pass
+
+def make_server(dist_dir,service=None,port=0):
+    server = ThreadingHTTPServer(('127.0.0.1',port),partial(SPAHandler,directory=str(dist_dir)))
+    server.service = service or LocalService(); server.token = secrets.token_urlsafe(32)
+    server.hosts = {f'127.0.0.1:{server.server_port}',f'localhost:{server.server_port}'}
+    server.origins = {'http://'+host for host in server.hosts}; server.daemon_threads = True
+    return server
 
 
-def find_free_port(start_port: int = 5173) -> int:
-    for port in range(start_port, start_port + 50):
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            if s.connect_ex(("127.0.0.1", port)) != 0:
-                return port
-    return start_port
-
-
-def launch_web(dist_dir: Path | None = None, open_browser: bool = True):
+def launch_web(dist_dir=None,open_browser=True,ready_file=None):
     root = Path(__file__).resolve().parent.parent
-    if dist_dir is None:
-        dist_dir = root / "web" / "dist"
-
-    if not dist_dir.exists() or not (dist_dir / "index.html").exists():
-        # Fallback to dev mode if node is installed
-        print("未检测到编译后的 web/dist，正在尝试以开发模式启动前端...")
-        web_dir = root / "web"
-        if (web_dir / "package.json").exists():
-            os.system(f'npm --prefix "{web_dir}" run dev')
-            return
-        raise SystemExit(f"错误：未找到前端编译目录: {dist_dir}")
-
-    port = find_free_port(5173)
-    url = f"http://localhost:{port}/"
-
-    server = ThreadingHTTPServer(
-        ("127.0.0.1", port),
-        lambda *args, **kwargs: SPAHandler(*args, directory=str(dist_dir), **kwargs)
-    )
-
-    print("=" * 60)
-    print("  聊有据 · 现代化高精科学沟通与回复辅助系统 (v2.6)")
-    print(f"  本地服务地址: {url}")
-    print("=" * 60)
-    print("  按 Ctrl + C 可停止服务\n")
-
-    if open_browser:
-        threading.Timer(0.5, lambda: webbrowser.open(url)).start()
-
-    try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        print("\n服务已平稳停止。")
-        server.server_close()
+    dist_dir = Path(dist_dir) if dist_dir else root/'web'/'dist'
+    if not (dist_dir/'index.html').is_file(): raise SystemExit('未找到新界面资源，请使用完整便携包或先运行 npm run build。')
+    server = make_server(dist_dir); url = f'http://127.0.0.1:{server.server_port}/'
+    if ready_file:
+        Path(ready_file).write_text(json.dumps({'url':url,'version':VERSION,'pid':__import__('os').getpid()}),encoding='utf-8')
+    if sys.stdout: print('聊有据 '+VERSION+' '+url,flush=True)
+    if open_browser: webbrowser.open(url)
+    try: server.serve_forever()
+    except KeyboardInterrupt: pass
+    finally: server.service.close(); server.server_close()

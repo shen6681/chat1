@@ -8,7 +8,17 @@ if (-not (Test-Path -LiteralPath $taskPython)) {
 if ($LASTEXITCODE -ne 0) { throw 'PyInstaller installation failed.' }
 & $taskPython -m unittest discover -s tests -v
 if ($LASTEXITCODE -ne 0) { throw 'Tests failed; build stopped.' }
-& $taskPython -m PyInstaller --noconfirm --onefile --windowed --name ChatReplyAssistant --icon assets\icon.ico --collect-all rapidocr_onnxruntime --collect-data onnxruntime --collect-binaries onnxruntime main.py
+if (-not (Get-Command npm.cmd -ErrorAction SilentlyContinue)) { throw 'Install Node.js to rebuild the React frontend, or use the portable release.' }
+Push-Location -LiteralPath (Join-Path $PSScriptRoot 'web')
+try {
+    & npm.cmd ci --ignore-scripts --no-audit --no-fund
+    if ($LASTEXITCODE -ne 0) { throw 'Frontend dependency installation failed.' }
+    & npm.cmd test
+    if ($LASTEXITCODE -ne 0) { throw 'Frontend tests failed.' }
+    & npm.cmd run build
+    if ($LASTEXITCODE -ne 0) { throw 'Frontend build failed.' }
+} finally { Pop-Location }
+& $taskPython -m PyInstaller --noconfirm ChatReplyAssistant.spec
 if ($LASTEXITCODE -ne 0) { throw 'Build failed.' }
 & $taskPython .\package_release.py
 if ($LASTEXITCODE -ne 0) { throw 'Release packaging failed.' }

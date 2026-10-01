@@ -4,6 +4,7 @@ from PyInstaller.utils.hooks import collect_dynamic_libs
 from PyInstaller.utils.hooks import collect_all
 
 datas = []
+datas += [('web/dist', 'web/dist')]
 binaries = []
 hiddenimports = []
 datas += collect_data_files('onnxruntime')

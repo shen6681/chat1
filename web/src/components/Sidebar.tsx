@@ -1,23 +1,24 @@
-import React, { useState, useRef, useLayoutEffect } from "react";
+import React, { useState, useRef, useLayoutEffect, useEffect } from "react";
 import { useApp } from "../context/AppContext";
-import { 
-  Users, 
-  Search, 
-  Plus, 
-  Sparkles, 
-  TrendingUp, 
-  AlertCircle 
+import {
+  Users,
+  Search,
+  Plus,
+  Sparkles,
+  TrendingUp,
+  AlertCircle
 } from "lucide-react";
 import { sound } from "../utils/sound";
 import { triggerRipple } from "../utils/ripple";
+import { api, errorText } from '../utils/api';
 
 export const Sidebar: React.FC = () => {
-  const { 
-    profiles, 
-    activeProfile, 
-    setActiveProfileId, 
+  const {
+    profiles,
+    activeProfile,
+    setActiveProfileId,
     setActiveTab,
-    setMobileView
+    setMobileView, showToast
   } = useApp();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -27,21 +28,32 @@ export const Sidebar: React.FC = () => {
   const filterRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
 
   useLayoutEffect(() => {
+    let disposed = false;
+    const measure = () => {
+      const el = filterRefs.current[platformFilter];
+      if (el && !disposed) setGliderStyle({ left: el.offsetLeft, width: el.offsetWidth });
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
     const el = filterRefs.current[platformFilter];
-    if (el) {
-      setGliderStyle({
-        left: el.offsetLeft,
-        width: el.offsetWidth,
-      });
-    }
+    if (el) { observer.observe(el); if (el.parentElement) observer.observe(el.parentElement); }
+    void document.fonts.ready.then(measure);
+    window.addEventListener('resize', measure);
+    return () => { disposed = true; observer.disconnect(); window.removeEventListener('resize', measure); };
   }, [platformFilter]);
 
   const filteredProfiles = profiles.filter((p) => {
-    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           p.conversationKey.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesPlatform = platformFilter === "all" || p.platform === platformFilter;
+    const matchesPlatform = platformFilter === "all" || p.platform.includes(platformFilter);
     return matchesSearch && matchesPlatform;
   });
+
+  useEffect(() => {
+    if (activeProfile && !filteredProfiles.some((p) => p.id === activeProfile.id)) {
+      setActiveProfileId('');
+    }
+  }, [activeProfile, filteredProfiles, setActiveProfileId]);
 
   const handleSelectProfile = (e: React.MouseEvent, id: string) => {
     triggerRipple(e);
@@ -57,7 +69,7 @@ export const Sidebar: React.FC = () => {
   };
 
   return (
-    <aside className="w-full md:w-72 lg:w-80 h-[calc(100vh-3.5rem)] flex flex-col border-r border-black/[0.06] dark:border-white/[0.07] bg-neutral-50/70 dark:bg-[#0c0c0e]/70 backdrop-blur-sm select-none">
+    <aside className="w-full lg:w-72 xl:w-80 h-[calc(100dvh-7rem)] lg:h-[calc(100dvh-3.5rem)] flex flex-col border-r border-black/[0.06] dark:border-white/[0.07] bg-neutral-50/70 dark:bg-[#0c0c0e]/70 backdrop-blur-sm select-none">
       {/* Top Header & Search */}
       <div className="p-3.5 border-b border-black/[0.05] dark:border-white/[0.06] space-y-2.5">
         <div className="flex items-center justify-between">
@@ -124,8 +136,8 @@ export const Sidebar: React.FC = () => {
       {/* Contact List */}
       <div className="flex-1 overflow-y-auto p-2 space-y-1">
         {filteredProfiles.length === 0 ? (
-          <div className="py-12 text-center text-xs text-neutral-400">
-            没有匹配的联系人
+            <div className="py-12 text-center text-xs text-neutral-400">
+            {profiles.length ? '没有匹配的联系人' : '还没有聊天档案，点击“新建导入”开始。'}
           </div>
         ) : (
           filteredProfiles.map((p) => {
@@ -171,14 +183,14 @@ export const Sidebar: React.FC = () => {
 
                     {/* Signal Badge */}
                     <div className="flex items-center gap-1 text-[10px]">
-                      {p.healthSignal >= 70 ? (
+                      {p.healthSignal !== null && p.healthSignal >= 70 ? (
                         <TrendingUp className="w-3 h-3 text-emerald-500 shrink-0" />
-                      ) : p.healthSignal <= 50 ? (
+                      ) : p.healthSignal !== null && p.healthSignal <= 50 ? (
                         <AlertCircle className="w-3 h-3 text-amber-500 shrink-0" />
                       ) : (
                         <Sparkles className="w-3 h-3 text-indigo-400 shrink-0" />
                       )}
-                      <span className={`truncate ${p.healthSignal >= 70 ? "text-emerald-600 dark:text-emerald-400" : p.healthSignal <= 50 ? "text-amber-600 dark:text-amber-400" : "text-neutral-500"}`}>
+                      <span className={`truncate ${p.healthSignal !== null && p.healthSignal >= 70 ? "text-emerald-600 dark:text-emerald-400" : p.healthSignal !== null && p.healthSignal <= 50 ? "text-amber-600 dark:text-amber-400" : "text-neutral-500"}`}>
                         {p.signalLabel}
                       </span>
                     </div>
@@ -192,7 +204,7 @@ export const Sidebar: React.FC = () => {
 
       {/* Footer info */}
       <div className="p-3 border-t border-black/[0.05] dark:border-white/[0.06] text-[11px] text-neutral-400 flex items-center justify-between">
-        <span className="truncate">archives.sqlite3 (本机存储)</span>
+        <button onClick={async () => { try { await api('/api/open-archive', {}); } catch (error) { showToast(errorText(error), 'danger'); } }} className="truncate hover:text-indigo-500" title="打开真实聊天档案所在的本机文件夹">打开存档目录</button>
         <span className="font-mono text-[10px] text-emerald-500">● 同步就绪</span>
       </div>
     </aside>

@@ -1,14 +1,15 @@
 {
   "name": "chat1",
-  "version": "2.6.0",
+  "version": "2.7.0",
   "description": "聊有据 · 现代化高精科学沟通与回复辅助系统 (Linear / Raycast 级高精 UI)",
   "private": true,
   "scripts": {
-    "dev": "npm --prefix web run dev",
-    "start": "npm --prefix web run dev",
+    "dev": "cmd /c 启动程序.cmd",
+    "start": "cmd /c 启动程序.cmd",
     "build": "npm --prefix web run build",
     "preview": "npm --prefix web run preview",
-    "install:all": "npm --prefix web install"
+    "install:all": "npm --prefix web install",
+    "dev:web": "npm --prefix web run dev"
   },
   "keywords": [
     "chat-assistant",

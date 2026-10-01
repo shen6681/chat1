@@ -11,6 +11,7 @@ import { SettingsModal } from "./components/SettingsModal";
 import { ToastContainer } from "./components/Toast";
 import { Users, MessageCircle, BrainCircuit } from "lucide-react";
 import { sound } from "./utils/sound";
+import { Guide } from './components/Guide';
 
 const AppContent: React.FC = () => {
   const { activeTab, mobileView, setMobileView } = useApp();
@@ -26,14 +27,14 @@ const AppContent: React.FC = () => {
       {/* Main Workspace Area */}
       <div className="flex-1 flex overflow-hidden">
         {activeTab === "workspace" && (
-          <div className="flex-1 flex flex-col md:flex-row overflow-hidden w-full pb-14 md:pb-0">
+          <div className="flex-1 flex flex-col lg:flex-row overflow-hidden w-full pb-14 lg:pb-0">
             {/* Desktop: Master Contact List */}
-            <div className={`w-full md:w-auto h-full ${mobileView === "contacts" ? "flex" : "hidden md:flex"}`}>
+            <div className={`w-full lg:w-auto h-full ${mobileView === "contacts" ? "flex" : "hidden lg:flex"}`}>
               <Sidebar />
             </div>
 
             {/* Desktop: Conversation Stream */}
-            <div className={`flex-1 min-w-0 h-full ${mobileView === "chat" ? "flex" : "hidden md:flex"}`}>
+            <div className={`flex-1 min-w-0 h-full ${mobileView === "chat" ? "flex" : "hidden lg:flex"}`}>
               <ChatTimeline />
             </div>
 
@@ -44,14 +45,14 @@ const AppContent: React.FC = () => {
           </div>
         )}
 
-        {activeTab === "import" && <ImportHub />}
+        <div className={activeTab === 'import' ? 'flex flex-1 min-w-0' : 'hidden'}><ImportHub /></div>
 
         {activeTab === "docs" && <OverviewDocs />}
       </div>
 
       {/* Mobile Bottom Navigation Bar (Active only on mobile screens when in workspace) */}
       {activeTab === "workspace" && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 h-14 bg-white/90 dark:bg-[#09090b]/90 backdrop-blur-md border-t border-black/[0.06] dark:border-white/[0.08] flex items-center justify-around z-30 px-2">
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 h-14 bg-white/90 dark:bg-[#09090b]/90 backdrop-blur-md border-t border-black/[0.06] dark:border-white/[0.08] flex items-center justify-around z-30 px-2">
           <button
             onClick={() => {
               sound.playClick();
@@ -107,6 +108,7 @@ const AppContent: React.FC = () => {
 
       {/* Notification Toast Container */}
       <ToastContainer />
+      <Guide />
     </div>
   );
 };

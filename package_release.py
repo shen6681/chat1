@@ -6,6 +6,7 @@ import sys
 import zipfile
 import hashlib
 import json
+import subprocess
 
 
 root = Path(__file__).resolve().parent
@@ -15,6 +16,7 @@ for name in ("README.md", "THIRD_PARTY_NOTICES.md", "LICENSE"):
     shutil.copy2(root / name, dist_root / name)
 licenses = dist_root / "licenses"
 licenses.mkdir(exist_ok=True)
+shutil.copytree(root / "web" / "licenses", licenses / "web", dirs_exist_ok=True)
 for distribution in metadata.distributions():
     name = distribution.metadata.get("Name", "unknown")
     for file in distribution.files or []:
@@ -59,18 +61,18 @@ if (tool_source / "QQChatExporter").exists():
     shutil.copy2(root / "HELPER_TOOLS.md", tool_dist / "README.md")
 source_output = dist_root / "source"
 source_output.mkdir(exist_ok=True)
-with zipfile.ZipFile(source_output / "ChatReplyAssistant-source-v2.6.zip", "w", zipfile.ZIP_DEFLATED) as archive:
-    files = [root / name for name in ("main.py", "requirements.txt", "README.md", "LICENSE", "THIRD_PARTY_NOTICES.md", "HELPER_TOOLS.md", "setup.ps1", "build.ps1", "package_release.py", "deploy_chat1.py", "package_clean_portable.py", "verify_clean_portable.py", "fetch_fonts.py", "preview_v26.py", "preview_motion.py", "probe_transitions.py", "ChatReplyAssistant.spec", "启动程序.cmd")]
-    for directory in ("chat_assistant", "tests"):
-        files.extend((root / directory).glob("*.py"))
-    files.extend(root / "assets" / name for name in ("icon.ico", "icon.png"))
-    files.extend(p for p in (root/'assets'/'fonts').iterdir() if p.is_file())
+with zipfile.ZipFile(source_output / "ChatReplyAssistant-source-v2.7.0.zip", "w", zipfile.ZIP_DEFLATED) as archive:
+    # Include the reviewed Git index, including React source, lockfiles and built assets.
+    # Untracked tools, node_modules, private data and build workspaces stay excluded.
+    tracked = subprocess.check_output(['git', 'ls-files', '-z'], cwd=root).decode('utf-8').split('\0')
+    files = [root / name for name in tracked if name]
     for file in files:
-        if file.exists():
-            archive.write(file, Path("ChatReplyAssistant") / file.relative_to(root))
+        if not file.is_file():
+            raise ValueError('Missing tracked source: ' + str(file.relative_to(root)))
+        archive.write(file, Path("ChatReplyAssistant") / file.relative_to(root))
 output = root / "ChatReplyAssistant-Windows.zip"
 with zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as archive:
     for file in sorted(dist_root.rglob("*")):
-        if file.is_file() and (not file.name.startswith('ChatReplyAssistant-source-v') or file.name=='ChatReplyAssistant-source-v2.6.zip'):
+        if file.is_file() and (not file.name.startswith('ChatReplyAssistant-source-v') or file.name=='ChatReplyAssistant-source-v2.7.0.zip'):
             archive.write(file, Path("ChatReplyAssistant") / file.relative_to(dist_root))
 print("Portable ZIP:", output)

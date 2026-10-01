@@ -1,4 +1,5 @@
 import React from "react";
+import { useApp } from '../context/AppContext';
 import { 
   BrainCircuit, 
   Compass, 
@@ -9,6 +10,7 @@ import {
 } from "lucide-react";
 
 export const OverviewDocs: React.FC = () => {
+  const { setGuideStep } = useApp();
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
@@ -20,6 +22,16 @@ export const OverviewDocs: React.FC = () => {
   return (
     <main className="flex-1 h-[calc(100vh-3.5rem)] overflow-y-auto bg-neutral-50/50 dark:bg-[#09090b] p-6 lg:p-12 transition-colors duration-200">
       <div className="max-w-3xl mx-auto space-y-12">
+        <section className="p-5 rounded-xl bg-white dark:bg-neutral-900 border border-indigo-500/20 space-y-3">
+          <h2 className="font-semibold">第一次使用，只需三步</h2>
+          <ol className="text-sm text-neutral-500 list-decimal pl-5 space-y-2">
+            <li>设置里填写自己的接口，选择字体与偏好，点击保存。</li>
+            <li>导入中心选择聊天文件，确认会话和“哪位是我”，保存档案。</li>
+            <li>工作台选择联系人和日期，开始评分；想知道原因时勾选消息，点击解释所选。</li>
+          </ol>
+          <p className="text-xs text-neutral-500">屏幕实时读取和QQ / 微信导出工具由右上角“屏幕 / 导出工具”打开原生窗口。离开浏览器页面不会关闭程序；结束使用时按 Ctrl+K，选择“退出程序”。</p>
+          <button onClick={() => setGuideStep(0)} className="text-xs text-indigo-600 underline">重新查看新手指南</button>
+        </section>
         {/* Editorial Hero */}
         <div className="space-y-3 border-b border-black/[0.06] dark:border-white/[0.08] pb-8">
           <div className="flex items-center gap-2 text-xs font-mono text-indigo-600 dark:text-indigo-400">
@@ -27,10 +39,10 @@ export const OverviewDocs: React.FC = () => {
             <span>DESIGN PRINCIPLES & METHODOLOGY</span>
           </div>
           <h1 className="text-3xl lg:text-4xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
-            产品架构与科学沟通体系
+            评分线索与使用说明
           </h1>
           <p className="text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed">
-            聊有据不是一个简单的聊天机器人，而是一个基于语境语义、决策结构化与现代心理动力学的人际沟通辅助系统。旨在帮助使用者清晰理解双方的真实沟通意图、尊重交往边界，并给出真诚且得体的下一句表达。
+            聊有据根据聊天文字整理互动线索、沟通逻辑和下一句表达建议。评分是模型对文本的判断，不代表对方真实想法或喜欢你的概率。
           </p>
         </div>
 
@@ -43,7 +55,7 @@ export const OverviewDocs: React.FC = () => {
             </h2>
           </div>
           <p className="text-xs text-neutral-500 leading-relaxed">
-            参考人际吸引力与互动动力学（FerryCorleone 模型），从日常文字中客观提取可验证的六项线索，避免“凭感觉猜心”：
+            参考 FerryCorleone 的六维互动线索设计，从日常文字中提取以下信号，并显示对应证据：
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -101,7 +113,7 @@ export const OverviewDocs: React.FC = () => {
                 TypeSafe Jev (System One)
               </span>
               <p className="text-xs text-neutral-500 leading-relaxed">
-                专长于结构化决策、分类、离散概率分布判定。负责为历史消息输出稳定的六维分数，绝不凭空幻觉数值。
+                Jev / 组合模式下负责历史消息批量评分，每10条保存一次。无法判断的记录会保留提示并继续处理后面的消息。
               </p>
             </div>
 
@@ -128,15 +140,15 @@ export const OverviewDocs: React.FC = () => {
           <div className="space-y-3 text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">
             <div className="flex items-start gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-              <span><strong>本地 SQLite 存储</strong>：聊天记录与分析结果全部保存在本机的 <code>archives.sqlite3</code> 中，杜绝全量聊天上传第三方云端。</span>
+              <span><strong>本地 SQLite 存储</strong>：聊天原文、评分和任务检查点保存在本机 <code>archives.sqlite3</code>。导入不联网；主动评分、解释或生成回复时，会向所选API发送相应文字与有限上下文。</span>
             </div>
             <div className="flex items-start gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-              <span><strong>Windows DPAPI 密钥加密</strong>：API Key 在落盘时使用 Windows 用户专属加密凭据，即使复制 settings.json 也无法窃取密钥。</span>
+              <span><strong>Windows DPAPI 密钥加密</strong>：勾选记住密钥后，用当前Windows用户的DPAPI加密保存；浏览器不会使用localStorage存储密钥。</span>
             </div>
             <div className="flex items-start gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-              <span><strong>本地 RapidOCR</strong>：屏幕识图基于本机 ONNX Runtime 推理，绝不将屏幕截屏发送至第三方识图云服务。</span>
+              <span><strong>本地 RapidOCR</strong>：默认在本机进行屏幕文字识别。原生窗口另有视觉模型选项，启用后会发送所选区域的截图。</span>
             </div>
           </div>
         </section>

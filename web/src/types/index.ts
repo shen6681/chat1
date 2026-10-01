@@ -9,6 +9,7 @@ export interface MessageItem {
   timestamp: string;
   senderName?: string;
   confidence?: number;
+  done?: boolean;
   messageId?: string;
   // Analysis metadata
   rating?: {
@@ -19,6 +20,7 @@ export interface MessageItem {
     boundary: number; // 0 to 1
     reason: string;
     source?: string;
+    grade?: string;
   };
   issue?: {
     kind: string;
@@ -75,7 +77,7 @@ export interface ContactProfile {
   selfIdentity: string;
   messageCount: number;
   lastActive: string;
-  healthSignal: number; // 0 - 100
+  healthSignal: number | null; // unknown evidence is not an estimated score
   signalLabel: string;
   unreadCount?: number;
   notes?: string;
@@ -98,4 +100,14 @@ export interface SettingsConfig {
   theme: "dark" | "light" | "system";
   reducedMotion: boolean;
   hapticSound: boolean;
+  hasChatKey?: boolean;
+  hasJevKey?: boolean;
+  fontFamily?: string;
+  chatFontSize?: number;
+  accent?: string;
+  surface?: string;
+  goal?: string;
+  style?: string;
+  selfOnRight?: boolean;
+  guideDone?: boolean;
 }

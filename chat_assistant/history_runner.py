@@ -41,6 +41,7 @@ def run_history(store, settings, profile_id, entries=None, start_text="", end_te
                     return {"run_id": run_id, "state": "paused", "completed": completed, "total": total}
                 if not store.acquire_analysis(profile_id, owner):
                     raise ValueError("当前分析任务锁已改变，已停止发起请求。")
+                request_error = None
                 if batch_size==1:
                     entry = entries[positions[0]]
                     transcript = context_for(entries,positions[0])
@@ -66,11 +67,18 @@ def run_history(store, settings, profile_id, entries=None, start_text="", end_te
                     for group in groups:
                         if cancel and cancel.is_set() and results:
                             break
-                        messages,targets,context_hash = batch_context(entries,group)
                         try:
+                            messages,targets,context_hash = batch_context(entries,group)
                             results.extend(analyze_batch(settings,messages,targets,cancel))
                         except UnjudgeableResponse as error:
-                            results.extend(issue_result(t["entry_id"],str(error)) for t in targets)
+                            results.extend(issue_result(entries[index].id,str(error)) for index in group)
+                        except Exception as error:
+                            if not results:
+                                raise
+                            # A later split request must not discard already received
+                            # scores or cause those paid requests to repeat on resume.
+                            request_error = error
+                            break
                 # The entire completed group is durable before any UI update, including pause requests.
                 store.save_batch(profile_id,results,context_hash,signature,run_id)
                 completed += len(results)
@@ -84,6 +92,8 @@ def run_history(store, settings, profile_id, entries=None, start_text="", end_te
                         on_progress("rated",{**data, "entry_id":entry.id,"rating":result})
                     else:
                         on_progress("batch",data)
+                if request_error is not None:
+                    raise request_error
                 if cancel and cancel.is_set() and completed<total:
                     store.finish_run(run_id,"paused")
                     return {"run_id":run_id,"state":"paused","completed":completed,"total":total}

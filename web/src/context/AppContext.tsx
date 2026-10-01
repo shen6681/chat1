@@ -1,327 +1,217 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import type { ContactProfile, MessageItem, AnalysisSummary, SettingsConfig, Speaker } from "../types";
-import { MOCK_PROFILES, MOCK_CONVERSATIONS, MOCK_ANALYSIS_SUMMARY, INITIAL_SETTINGS } from "../data/mockData";
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import type { ContactProfile, MessageItem, AnalysisSummary, SettingsConfig, Speaker } from '../types';
+import { INITIAL_SETTINGS } from '../data/mockData';
+import { api, errorText } from '../utils/api';
+import { sound } from '../utils/sound';
+import { pollJob } from '../utils/pollJob';
 
-export interface ToastItem {
-  id: string;
-  message: string;
-  type: "success" | "info" | "warning" | "danger";
+export interface ToastItem { id: string; message: string; type: 'success' | 'info' | 'warning' | 'danger' }
+type Tab = 'workspace' | 'import' | 'docs';
+export interface Job {
+  id: string; profile: string; kind: string; state: string; completed: number; total: number;
+  error?: string; run_id?: string; notices: { page: number; entryId: number; reason: string }[];
+  analysis?: AnalysisSummary;
+  start?: string; end?: string;
 }
-
+interface Page {
+  viewScope?: string;
+  profileId: string; messages: MessageItem[]; total: number; analysis: AnalysisSummary;
+  lastRun?: { id: string; state: string; completed: number; total: number; start_text: string; end_text: string };
+}
 interface AppContextType {
-  theme: "dark" | "light";
-  toggleTheme: () => void;
-  activeTab: "workspace" | "import" | "docs";
-  setActiveTab: (tab: "workspace" | "import" | "docs") => void;
-  mobileView: "contacts" | "chat" | "inspector";
-  setMobileView: (view: "contacts" | "chat" | "inspector") => void;
-  profiles: ContactProfile[];
-  activeProfile: ContactProfile | undefined;
-  setActiveProfileId: (id: string) => void;
-  messages: MessageItem[];
-  analysis: AnalysisSummary | undefined;
-  selectedMessage: MessageItem | undefined;
+  theme: 'dark' | 'light'; toggleTheme: () => void;
+  activeTab: Tab; setActiveTab: (tab: Tab) => void;
+  mobileView: 'contacts' | 'chat' | 'inspector'; setMobileView: (view: 'contacts' | 'chat' | 'inspector') => void;
+  profiles: ContactProfile[]; activeProfile: ContactProfile | undefined; setActiveProfileId: (id: string) => void;
+  messages: MessageItem[]; analysis: AnalysisSummary | undefined; selectedMessage: MessageItem | undefined;
   setSelectedMessageId: (id: string | number | null) => void;
-  isAnalyzing: boolean;
-  isLiveListening: boolean;
-  toggleLiveListening: () => void;
-  commandPaletteOpen: boolean;
-  setCommandPaletteOpen: (open: boolean) => void;
-  settingsOpen: boolean;
-  setSettingsOpen: (open: boolean) => void;
-  importModalOpen: boolean;
-  setImportModalOpen: (open: boolean) => void;
-  settings: SettingsConfig;
-  updateSettings: (newSettings: Partial<SettingsConfig>) => void;
-  sendMessage: (text: string, speaker: Speaker) => void;
-  triggerBatchAnalyze: () => void;
-  importProfile: (profile: ContactProfile, messages: MessageItem[]) => void;
-  toasts: ToastItem[];
-  showToast: (message: string, type?: "success" | "info" | "warning" | "danger") => void;
-  dismissToast: (id: string) => void;
+  selectedIds: number[]; toggleMessageSelection: (id: number) => void; clearSelection: () => void;
+  isAnalyzing: boolean; isLiveListening: boolean; toggleLiveListening: () => Promise<void>;
+  commandPaletteOpen: boolean; setCommandPaletteOpen: (open: boolean) => void;
+  settingsOpen: boolean; setSettingsOpen: (open: boolean) => void;
+  importModalOpen: boolean; setImportModalOpen: (open: boolean) => void;
+  settings: SettingsConfig; updateSettings: (settings: Partial<SettingsConfig>) => Promise<boolean>;
+  sendMessage: (text: string, speaker: Speaker) => Promise<boolean>;
+  triggerBatchAnalyze: (resume?: boolean) => Promise<void>; explainSelected: () => Promise<void>;
+  generateReplies: () => Promise<void>; pauseJob: () => Promise<void>;
+  reconnectJob: () => Promise<void>;
+  refreshProfiles: (select?: string) => Promise<void>;
+  toasts: ToastItem[]; showToast: (message: string, type?: ToastItem['type']) => void; dismissToast: (id: string) => void;
+  startDate: string; endDate: string; setDateRange: (start: string, end: string) => void;
+  page: number; setPage: (page: number) => void; total: number; lastRun: Page['lastRun']; job: Job | null;
+  ready: boolean; loadingMessages: boolean; guideStep: number | null; setGuideStep: (step: number | null) => void;
+  finishGuide: () => Promise<void>;
 }
-
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setTheme] = useState<"dark" | "light">(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get("theme") === "light") return "light";
-      if (params.get("theme") === "dark") return "dark";
-      try {
-        const saved = localStorage.getItem("chat1_theme");
-        if (saved === "light" || saved === "dark") return saved;
-      } catch {}
-    }
-    return "dark";
+  const [settings, setSettings] = useState<SettingsConfig>(INITIAL_SETTINGS);
+  const [ready, setReady] = useState(false);
+  const [activeTab, setTab] = useState<Tab>(() => {
+    const tab = new URLSearchParams(window.location.search).get('tab');
+    return tab === 'import' || tab === 'docs' ? tab : 'workspace';
   });
-
-  const [activeTab, setActiveTabState] = useState<"workspace" | "import" | "docs">(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const t = params.get("tab");
-      if (t === "import" || t === "docs") return t;
-    }
-    return "workspace";
-  });
-
-  const setActiveTab = (tab: "workspace" | "import" | "docs") => {
-    setActiveTabState(tab);
-    if (typeof window !== "undefined") {
-      const url = new URL(window.location.href);
-      url.searchParams.set("tab", tab);
-      window.history.replaceState({}, "", url.toString());
-    }
-  };
-  const [mobileView, setMobileView] = useState<"contacts" | "chat" | "inspector">("contacts");
-  
-  const [profiles, setProfiles] = useState<ContactProfile[]>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = localStorage.getItem("chat1_profiles");
-        if (saved) return JSON.parse(saved);
-      } catch {}
-    }
-    return MOCK_PROFILES;
-  });
-
-  const [activeProfileId, setActiveProfileId] = useState<string>("p1");
-
-  const [conversations, setConversations] = useState<Record<string, MessageItem[]>>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = localStorage.getItem("chat1_conversations");
-        if (saved) return JSON.parse(saved);
-      } catch {}
-    }
-    return MOCK_CONVERSATIONS;
-  });
-
-  const [analysisMap, setAnalysisMap] = useState<Record<string, AnalysisSummary>>(MOCK_ANALYSIS_SUMMARY);
+  const [mobileView, setMobileView] = useState<'contacts' | 'chat' | 'inspector'>('contacts');
+  const [profiles, setProfiles] = useState<ContactProfile[]>([]);
+  const [activeProfileId, setProfileId] = useState('');
+  const [pageData, setPageData] = useState<Page | null>(null);
+  const [loadingMessages, setLoadingMessages] = useState(false);
+  const [startDate, setStart] = useState(''); const [endDate, setEnd] = useState('');
+  const [page, setPage] = useState(0); const [revision, setRevision] = useState(0);
   const [selectedMessageId, setSelectedMessageId] = useState<string | number | null>(null);
-  
-  const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
-  const [isLiveListening, setIsLiveListening] = useState<boolean>(false);
-  const [commandPaletteOpen, setCommandPaletteOpen] = useState<boolean>(() => {
-    if (typeof window !== "undefined") {
-      return new URLSearchParams(window.location.search).get("modal") === "command";
-    }
-    return false;
-  });
-  const [settingsOpen, setSettingsOpen] = useState<boolean>(() => {
-    if (typeof window !== "undefined") {
-      return new URLSearchParams(window.location.search).get("modal") === "settings";
-    }
-    return false;
-  });
-  const [importModalOpen, setImportModalOpen] = useState<boolean>(false);
-
-  const [settings, setSettings] = useState<SettingsConfig>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = localStorage.getItem("chat1_settings");
-        if (saved) return { ...INITIAL_SETTINGS, ...JSON.parse(saved) };
-      } catch {}
-    }
-    return INITIAL_SETTINGS;
-  });
-
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [importModalOpen, setImportModalOpen] = useState(false);
+  const [job, setJob] = useState<Job | null>(null);
+  const [replyAnalysis, setReplyAnalysis] = useState<{ profile: string; start: string; end: string; analysis: AnalysisSummary } | null>(null);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
+  const [guideStep, setGuideStep] = useState<number | null>(null);
+  const alive = useRef(true); const taskStarting = useRef(false);
 
-  // Apply dark mode class to document element and persist
-  useEffect(() => {
-    const root = document.documentElement;
-    if (theme === "dark") {
-      root.classList.add("dark");
-      root.setAttribute("data-theme", "dark");
-    } else {
-      root.classList.remove("dark");
-      root.setAttribute("data-theme", "light");
-    }
-    try {
-      localStorage.setItem("chat1_theme", theme);
-    } catch {}
-  }, [theme]);
-
-  // Persist profiles and conversations
-  useEffect(() => {
-    try {
-      localStorage.setItem("chat1_profiles", JSON.stringify(profiles));
-    } catch {}
-  }, [profiles]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem("chat1_conversations", JSON.stringify(conversations));
-    } catch {}
-  }, [conversations]);
-
-  // Global keyboard shortcuts (Cmd+K / Ctrl+K, Esc)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        setCommandPaletteOpen((prev) => !prev);
-      } else if (e.key === "Escape") {
-        setCommandPaletteOpen(false);
-        setSettingsOpen(false);
-        setImportModalOpen(false);
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+  const showToast = useCallback((message: string, type: ToastItem['type'] = 'success') => {
+    const id = crypto.randomUUID();
+    setToasts((prev) => [...prev.slice(-3), { id, message, type }]);
+    setTimeout(() => { if (alive.current) setToasts((prev) => prev.filter((t) => t.id !== id)); }, 6500);
   }, []);
 
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+  const refreshProfiles = useCallback(async (select?: string) => {
+    const data = await api<{ profiles: ContactProfile[] }>('/api/profiles');
+    if (!alive.current) return;
+    setProfiles(data.profiles);
+    setProfileId((current) => select ?? (data.profiles.some((p) => p.id === current) ? current : ''));
+    setRevision((prev) => prev + 1);
+  }, []);
+
+  useEffect(() => {
+    alive.current = true;
+    api<SettingsConfig>('/api/settings').then(async (saved) => {
+      if (!alive.current) return;
+      setSettings(saved); await refreshProfiles();
+      if (!alive.current) return;
+      setReady(true); if (!saved.guideDone) setGuideStep(0);
+    }).catch((error) => showToast(errorText(error), 'danger'));
+    return () => { alive.current = false; };
+  }, [refreshProfiles, showToast]);
+
+  const setActiveProfileId = (id: string) => {
+    setProfileId(id); setPage(0); setStart(''); setEnd(''); setSelectedMessageId(null);
+    setSelectedIds([]); setReplyAnalysis(null);
   };
-
-  const showToast = (message: string, type: "success" | "info" | "warning" | "danger" = "success") => {
-    const id = Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 2800);
+  const setDateRange = (start: string, end: string) => {
+    setStart(start); setEnd(end); setPage(0); setSelectedIds([]); setSelectedMessageId(null); setReplyAnalysis(null);
   };
+  useEffect(() => {
+    if (!activeProfileId) { setPageData(null); return; }
+    const controller = new AbortController();
+    setLoadingMessages(true);
+    const query = new URLSearchParams({ profile: activeProfileId, start: startDate, end: endDate, offset: String(page * 100) });
+    api<Page>('/api/messages?' + query, undefined, controller.signal).then((data) => {
+      if (controller.signal.aborted) return;
+      setPageData({ ...data, viewScope: [activeProfileId, startDate, endDate, page].join('|') }); setLoadingMessages(false);
+    }).catch((error) => {
+      if (controller.signal.aborted) return;
+      setLoadingMessages(false); setPageData(null); showToast(errorText(error), 'danger');
+    });
+    return () => controller.abort();
+  }, [activeProfileId, startDate, endDate, page, revision, showToast]);
 
-  const dismissToast = (id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
-  };
-
-  const activeProfile = profiles.find((p) => p.id === activeProfileId);
-  const messages = conversations[activeProfileId] || [];
-  const analysis = analysisMap[activeProfileId];
-  const selectedMessage = messages.find((m) => m.id === selectedMessageId);
-
-  const sendMessage = (text: string, speaker: Speaker = "我") => {
-    if (!text.trim()) return;
-    const now = new Date();
-    const timeStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}`;
-    
-    const newMsg: MessageItem = {
-      id: "m_" + Date.now(),
-      speaker,
-      text,
-      timestamp: timeStr,
-      confidence: 1.0,
-      rating: speaker === "我" ? {
-        speaker: "我",
-        score: 88,
-        confidence: 0.9,
-        boundary: 0.0,
-        reason: "回复切题自然，情绪同频，接续良好。",
-        source: "DeepSeek / deepseek-flash",
-      } : {
-        speaker: "对方",
-        affinityDelta: 1,
-        confidence: 0.85,
-        boundary: 0.0,
-        reason: "实时检测到积极话题交互信号。",
-        source: "TypeSafe Jev",
-      },
+  const isDark = settings.theme === 'dark' || (settings.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  const theme = isDark ? 'dark' : 'light';
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', isDark);
+    document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.setAttribute('data-motion', settings.reducedMotion ? 'reduced' : 'normal');
+    document.documentElement.setAttribute('data-accent', settings.accent || 'blue');
+    document.documentElement.setAttribute('data-surface', settings.surface || 'theme');
+    document.body.style.fontFamily = `"${settings.fontFamily || 'Microsoft YaHei UI'}", sans-serif`;
+    sound.setEnabled(settings.hapticSound);
+  }, [settings, isDark, theme]);
+  useEffect(() => {
+    const handle = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault(); setCommandPaletteOpen((prev) => !prev);
+      } else if (e.key === 'Escape') { setCommandPaletteOpen(false); setSettingsOpen(false); setImportModalOpen(false); }
     };
+    window.addEventListener('keydown', handle); return () => window.removeEventListener('keydown', handle);
+  }, []);
 
-    setConversations((prev) => ({
-      ...prev,
-      [activeProfileId]: [...(prev[activeProfileId] || []), newMsg],
-    }));
-
-    showToast(`已添加${speaker === "我" ? "我方发言" : "对方发言"}并触发实时语境更新`);
+  const updateSettings = async (patch: Partial<SettingsConfig>) => {
+    try { const saved = await api<SettingsConfig>('/api/settings', patch); setSettings(saved); showToast('设置已保存到本机，密钥由 Windows 加密保护。'); return true; }
+    catch (error) { showToast(errorText(error), 'danger'); return false; }
   };
-
-  const triggerBatchAnalyze = () => {
-    setIsAnalyzing(true);
-    showToast("正在通过 TypeSafe Jev & DeepSeek 执行原子批次评分...", "info");
-    
-    setTimeout(() => {
-      setIsAnalyzing(false);
-      showToast("批次评分完成：已持久化至本地 SQLite FULL 同步事务", "success");
-    }, 1200);
+  const setActiveTab = (tab: Tab) => {
+    setTab(tab); const url = new URL(window.location.href); url.searchParams.set('tab', tab); window.history.replaceState({}, '', url);
   };
-
-  const toggleLiveListening = () => {
-    setIsLiveListening((prev) => {
-      const next = !prev;
-      if (next) {
-        showToast("已启动屏幕 OCR 监听：窗口已绑定，九点遮挡采样保护生效中", "info");
-      } else {
-        showToast("已暂停屏幕 OCR 监听");
-      }
-      return next;
-    });
+  const sendMessage = async (text: string, speaker: Speaker) => {
+    if (!activeProfileId) return false;
+    try { await api('/api/messages', { profile: activeProfileId, text, speaker }); await refreshProfiles(); setReplyAnalysis(null); showToast('文字已存入本机档案，尚未评分。'); return true; }
+    catch (error) { showToast(errorText(error), 'danger'); return false; }
   };
-
-  const updateSettings = (newSettings: Partial<SettingsConfig>) => {
-    setSettings((prev) => {
-      const updated = { ...prev, ...newSettings };
-      try {
-        localStorage.setItem("chat1_settings", JSON.stringify(updated));
-      } catch {}
-      return updated;
-    });
-    showToast("偏好设置已更新并保存至本地 DPAPI 加密存储", "success");
+  const trackJob = async (started: Job) => {
+    setJob(started); let completed = -1;
+    const latest = await pollJob(started, () => api<Job>('/api/jobs/' + started.id), (value) => {
+      setJob(value);
+      if (value.completed !== completed) { completed = value.completed; setRevision((prev) => prev + 1); }
+    }, () => alive.current);
+    if (!alive.current) return;
+    if (latest.analysis) setReplyAnalysis({ profile: latest.profile, start: latest.start || '', end: latest.end || '', analysis: latest.analysis });
+    await refreshProfiles();
+    if (latest.state === 'error') showToast(latest.error || '任务失败，已保存的记录保留。', 'danger');
+    else showToast(latest.state === 'paused' ? '已暂停；已完成的结果保留，可续做。' : latest.kind === 'reply' ? '已生成下一句建议。' : '任务已完成，结果已保存。');
+    if (latest.notices.length) showToast(`无法判断的消息在第 ${[...new Set(latest.notices.map((n) => n.page))].join('、')} 页；已记录并自动继续。`, 'warning');
   };
-
-  const importProfile = (newProf: ContactProfile, newMsgs: MessageItem[]) => {
-    setProfiles((prev) => [newProf, ...prev]);
-    setConversations((prev) => ({ ...prev, [newProf.id]: newMsgs }));
-    setAnalysisMap((prev) => ({
-      ...prev,
-      [newProf.id]: {
-        ...MOCK_ANALYSIS_SUMMARY.p1,
-        summary: `已完成【${newProf.name}】的初步导入分析。检测到 ${newMsgs.length} 条有效记录，当前互动态势良好。`,
-      },
-    }));
-    setActiveProfileId(newProf.id);
-    setActiveTab("workspace");
-    showToast(`已成功导入联系人【${newProf.name}】(${newMsgs.length} 条有效记录)`, "success");
+  const disconnected = (error: unknown) => {
+    setJob((current) => current?.state === 'running' ? { ...current, state: 'disconnected' } : current);
+    showToast(errorText(error) + ' 已保留任务编号，可点击“重新连接任务”。', 'danger');
   };
-
-  return (
-    <AppContext.Provider
-      value={{
-        theme,
-        toggleTheme,
-        activeTab,
-        setActiveTab,
-        mobileView,
-        setMobileView,
-        profiles,
-        activeProfile,
-        setActiveProfileId,
-        messages,
-        analysis,
-        selectedMessage,
-        setSelectedMessageId,
-        isAnalyzing,
-        isLiveListening,
-        toggleLiveListening,
-        commandPaletteOpen,
-        setCommandPaletteOpen,
-        settingsOpen,
-        setSettingsOpen,
-        importModalOpen,
-        setImportModalOpen,
-        settings,
-        updateSettings,
-        sendMessage,
-        triggerBatchAnalyze,
-        importProfile,
-        toasts,
-        showToast,
-        dismissToast,
-      }}
-    >
-      {children}
-    </AppContext.Provider>
-  );
+  const reconnectJob = async () => {
+    if (!job || taskStarting.current) return;
+    taskStarting.current = true;
+    try { await trackJob(await api<Job>('/api/jobs/' + job.id)); }
+    catch (error) { disconnected(error); }
+    finally { taskStarting.current = false; }
+  };
+  const runTask = async (kind: string, extra: object = {}) => {
+    if (taskStarting.current || job?.state === 'running') return;
+    if (job?.state === 'disconnected') { showToast('请先重新连接现有任务，再开始新的分析。', 'warning'); return; }
+    if (!activeProfileId) { showToast('请先选择联系人。', 'warning'); return; }
+    taskStarting.current = true;
+    try {
+      const started = await api<Job>('/api/jobs/' + kind, { profile: activeProfileId, start: startDate, end: endDate, ...extra });
+      await trackJob(started);
+    } catch (error) { disconnected(error); }
+    finally { taskStarting.current = false; }
+  };
+  const toggleLiveListening = async () => {
+    try { await api('/api/native', {}); showToast('已打开屏幕与导出工具窗口，请在那里选择聊天区域并开始读取。', 'info'); }
+    catch (error) { showToast(errorText(error), 'danger'); }
+  };
+  const data = pageData?.profileId === activeProfileId && pageData.viewScope === [activeProfileId, startDate, endDate, page].join('|') ? pageData : null;
+  const messages = data?.messages || [];
+  return <AppContext.Provider value={{
+    theme, toggleTheme: () => { void updateSettings({ theme: theme === 'dark' ? 'light' : 'dark' }); },
+    activeTab, setActiveTab, mobileView, setMobileView, profiles,
+    activeProfile: profiles.find((p) => p.id === activeProfileId), setActiveProfileId,
+    messages, analysis: replyAnalysis?.profile === activeProfileId && replyAnalysis.start === startDate && replyAnalysis.end === endDate ? replyAnalysis.analysis : data?.analysis,
+    selectedMessage: messages.find((m) => m.id === selectedMessageId), setSelectedMessageId,
+    selectedIds, toggleMessageSelection: (id) => setSelectedIds((prev) => prev.includes(id) ? prev.filter((n) => n !== id) : [...prev, id]),
+    clearSelection: () => setSelectedIds([]), isAnalyzing: job?.state === 'running',
+    isLiveListening: false, toggleLiveListening, commandPaletteOpen, setCommandPaletteOpen,
+    settingsOpen, setSettingsOpen, importModalOpen, setImportModalOpen, settings, updateSettings,
+    sendMessage, triggerBatchAnalyze: (resume = false) => runTask('score', resume && data?.lastRun ? { runId: data.lastRun.id } : {}),
+    explainSelected: () => runTask('explain', { ids: selectedIds.length ? selectedIds : selectedMessageId === null ? [] : [Number(selectedMessageId)] }),
+    generateReplies: () => runTask('reply'), pauseJob: async () => { try { if (job) await api('/api/jobs/pause', { id: job.id }); } catch (error) { showToast(errorText(error), 'danger'); } },
+    reconnectJob,
+    refreshProfiles, toasts, showToast, dismissToast: (id) => setToasts((prev) => prev.filter((t) => t.id !== id)),
+    startDate, endDate, setDateRange, page, setPage, total: data?.total || 0, lastRun: data?.lastRun,
+    job, ready, loadingMessages, guideStep, setGuideStep,
+    finishGuide: async () => { if (await updateSettings({ guideDone: true })) setGuideStep(null); },
+  }}>{children}</AppContext.Provider>;
 };
 
 export const useApp = () => {
   const context = useContext(AppContext);
-  if (!context) {
-    throw new Error("useApp must be used within an AppProvider");
-  }
+  if (!context) throw new Error('useApp must be used within AppProvider');
   return context;
 };
