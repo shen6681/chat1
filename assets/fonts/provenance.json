@@ -1,0 +1,54 @@
+[
+  {
+    "label": "霞鹜文楷 · 温柔手写",
+    "family": "LXGW WenKai Lite",
+    "file": "LXGWWenKaiLite-Regular.ttf",
+    "sha256": "140c99ba4e28e817cec49bf82a0c5fcdc4fe633fb9dfda16d0ee8d59a8545f15",
+    "repository": "https://github.com/lxgw/LxgwWenKai-Lite",
+    "commit": "4cddacbe244b0a24b10076369105f0495e5ec898",
+    "url": "https://raw.githubusercontent.com/lxgw/LxgwWenKai-Lite/4cddacbe244b0a24b10076369105f0495e5ec898/fonts/TTF/LXGWWenKaiLite-Regular.ttf",
+    "license": "SIL OFL 1.1",
+    "license_file": "LXGWWenKaiLite-Regular-OFL.txt",
+    "license_url": "https://raw.githubusercontent.com/lxgw/LxgwWenKai-Lite/4cddacbe244b0a24b10076369105f0495e5ec898/OFL.txt",
+    "modified": false
+  },
+  {
+    "label": "站酷快乐体 · 俏皮圆润",
+    "family": "ZCOOL KuaiLe",
+    "file": "ZCOOLKuaiLe-Regular.ttf",
+    "sha256": "812a6fc1fe54b6d73a419245c32dfeba8aa33104d5be90d1cf6af082007cb71d",
+    "repository": "https://github.com/google/fonts",
+    "commit": "9710da1eacb3be272583c3224dcb70f9da6eadbb",
+    "url": "https://raw.githubusercontent.com/google/fonts/9710da1eacb3be272583c3224dcb70f9da6eadbb/ofl/zcoolkuaile/ZCOOLKuaiLe-Regular.ttf",
+    "license": "SIL OFL 1.1",
+    "license_file": "ZCOOLKuaiLe-Regular-OFL.txt",
+    "license_url": "https://raw.githubusercontent.com/google/fonts/9710da1eacb3be272583c3224dcb70f9da6eadbb/ofl/zcoolkuaile/OFL.txt",
+    "modified": false
+  },
+  {
+    "label": "站酷小薇体 · 清秀书卷",
+    "family": "ZCOOL XiaoWei",
+    "file": "ZCOOLXiaoWei-Regular.ttf",
+    "sha256": "a42b620140f493db42f741351dfbf343c0936d58588ee8004b8b2a218d997ff1",
+    "repository": "https://github.com/google/fonts",
+    "commit": "9710da1eacb3be272583c3224dcb70f9da6eadbb",
+    "url": "https://raw.githubusercontent.com/google/fonts/9710da1eacb3be272583c3224dcb70f9da6eadbb/ofl/zcoolxiaowei/ZCOOLXiaoWei-Regular.ttf",
+    "license": "SIL OFL 1.1",
+    "license_file": "ZCOOLXiaoWei-Regular-OFL.txt",
+    "license_url": "https://raw.githubusercontent.com/google/fonts/9710da1eacb3be272583c3224dcb70f9da6eadbb/ofl/zcoolxiaowei/OFL.txt",
+    "modified": false
+  },
+  {
+    "label": "马善政楷书 · 笔墨手写",
+    "family": "Ma Shan Zheng",
+    "file": "MaShanZheng-Regular.ttf",
+    "sha256": "6d2546bb189c732a8ca29af9e22457b152387d158aa459e4ac2ce1e51788b7fb",
+    "repository": "https://github.com/google/fonts",
+    "commit": "9710da1eacb3be272583c3224dcb70f9da6eadbb",
+    "url": "https://raw.githubusercontent.com/google/fonts/9710da1eacb3be272583c3224dcb70f9da6eadbb/ofl/mashanzheng/MaShanZheng-Regular.ttf",
+    "license": "SIL OFL 1.1",
+    "license_file": "MaShanZheng-Regular-OFL.txt",
+    "license_url": "https://raw.githubusercontent.com/google/fonts/9710da1eacb3be272583c3224dcb70f9da6eadbb/ofl/mashanzheng/OFL.txt",
+    "modified": false
+  }
+]
