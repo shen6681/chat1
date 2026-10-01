@@ -3,7 +3,8 @@
 __pycache__/
 *.py[cod]
 build/
-dist/
+/dist/
+!web/dist/
 *.exe
 *.zip
 *.sqlite*
