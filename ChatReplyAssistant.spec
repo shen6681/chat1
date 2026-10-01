@@ -7,6 +7,12 @@ datas = []
 datas += [('web/dist', 'web/dist')]
 binaries = []
 hiddenimports = []
+for package in ('webview','pythonnet','clr_loader'):
+    datas += collect_data_files(package)
+    binaries += collect_dynamic_libs(package)
+hiddenimports += ['webview.platforms.winforms','webview.platforms.edgechromium',
+                  'clr','pythonnet','clr_loader','_cffi_backend']
+datas += [('assets/icon.ico','assets')]
 datas += collect_data_files('onnxruntime')
 binaries += collect_dynamic_libs('onnxruntime')
 tmp_ret = collect_all('rapidocr_onnxruntime')
@@ -22,7 +28,8 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
+    excludes=['PyQt5','PyQt6','PySide2','PySide6','gi','webview.platforms.qt','webview.platforms.gtk',
+              'webview.platforms.cef','webview.platforms.cocoa','webview.platforms.android','webview.platforms.mshtml'],
     noarchive=False,
     optimize=0,
 )
@@ -38,7 +45,7 @@ exe = EXE(
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=True,
+    upx=False,
     upx_exclude=[],
     runtime_tmpdir=None,
     console=False,

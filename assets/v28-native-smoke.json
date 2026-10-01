@@ -1,0 +1,15 @@
+{
+  "synthetic": true,
+  "shell": "WebView2",
+  "url": "http://127.0.0.1:57439/",
+  "initial": {
+    "title": "聊有据 · QQ / 微信对话洞察与回复助手",
+    "ready": true,
+    "noSearch": true,
+    "fonts": "loaded"
+  },
+  "import": {
+    "wechat": true,
+    "dashboard": true
+  }
+}

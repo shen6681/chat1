@@ -24,7 +24,9 @@ GPL-3.0 完整许可证在 `QQNT_Export/LICENSE`；对应版本源码在 `QQNT_E
 
 ## 微信
 
-已按要求改用 [sunhanaix/pc_wechat_exp](https://github.com/sunhanaix/pc_wechat_exp)，附带未修改的官方 `wechat_exp_2.10.20260928.exe`、同版本源码 ZIP、上游说明和 SHA256 来源清单，位于 `WeChatEXP`。在微信导出页点击“启动导出器”后独立运行，数据和配置保留在该目录；助手不会自动触发备份或读取微信进程。按导出器页面完成备份，选择一个私聊导出 ChatLab JSONL / JSON / TXT / 聊天 HTML，再回助手导入纯文字。图片和表情包等媒体消息跳过，不读取对应文件。
+已按要求改用 [sunhanaix/pc_wechat_exp](https://github.com/sunhanaix/pc_wechat_exp)，附带未修改的官方 `wechat_exp_2.10.20260928.exe`、同版本源码 ZIP、上游说明和 SHA256 来源清单，位于 `WeChatEXP`。在新版导入中心可直接打开 WeChatEXP 仪表盘，也可使用一键流程：用户分别主动选择备份、文字导出目录（无默认地址）、选择账号后备份、选择私聊后分页提取文字、确认身份并保存。助手调用本机 backup/scan、backup/run、contacts 和 messages API，不使用上游 export/chat 的默认导出目录。上游工具执行备份；助手不导入图片或表情包。
+
+消息读取运行独立的官方 serve 实例，隔离配置仅含本次选择的备份目录和已核验账号，避免上游备份切换目录但未切换账号状态的问题。不会复制或改动原工具密钥、登录配置。备份文件只写入用户选择的备份目录，文字 JSON 只写入用户选择的导出目录；助手内部 API 运行时不作为导出路径。
 
 已核对可执行文件 SHA256 与 GitHub 发行资产 digest 相同：`000bc70437123d68c953d35d0f95dc0c12c2a5757686bd8f0f04717a9663bb6b`。上游该版本没有声明许可证；这是按用户指定下载到个人本机使用的原始工具，助手的 MIT 许可不覆盖它，也不能据此推定商业分发权。保留作者和来源，后续分发须按上游授权处理。
 

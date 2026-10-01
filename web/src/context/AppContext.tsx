@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
-import type { ContactProfile, MessageItem, AnalysisSummary, SettingsConfig, Speaker } from '../types';
+import type { ContactProfile, MessageItem, AnalysisSummary, SettingsConfig, Speaker, AffinityState } from '../types';
 import { INITIAL_SETTINGS } from '../data/mockData';
 import { api, errorText } from '../utils/api';
 import { sound } from '../utils/sound';
@@ -14,11 +14,13 @@ export interface Job {
   start?: string; end?: string;
 }
 interface Page {
+  affinity?: AffinityState;
   viewScope?: string;
   profileId: string; messages: MessageItem[]; total: number; analysis: AnalysisSummary;
   lastRun?: { id: string; state: string; completed: number; total: number; start_text: string; end_text: string };
 }
 interface AppContextType {
+  affinity: AffinityState | undefined; calculateAffinity: () => Promise<void>;
   theme: 'dark' | 'light'; toggleTheme: () => void;
   activeTab: Tab; setActiveTab: (tab: Tab) => void;
   mobileView: 'contacts' | 'chat' | 'inspector'; setMobileView: (view: 'contacts' | 'chat' | 'inspector') => void;
@@ -190,6 +192,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const data = pageData?.profileId === activeProfileId && pageData.viewScope === [activeProfileId, startDate, endDate, page].join('|') ? pageData : null;
   const messages = data?.messages || [];
   return <AppContext.Provider value={{
+    affinity: data?.affinity, calculateAffinity: () => runTask('affinity', { calculate: true }),
     theme, toggleTheme: () => { void updateSettings({ theme: theme === 'dark' ? 'light' : 'dark' }); },
     activeTab, setActiveTab, mobileView, setMobileView, profiles,
     activeProfile: profiles.find((p) => p.id === activeProfileId), setActiveProfileId,

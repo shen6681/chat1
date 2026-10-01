@@ -2,8 +2,9 @@ import React, { useState, useRef } from 'react';
 import { FileUp, Upload, ArrowRight, CheckCircle2, Loader2, UserCheck } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { api, errorText, filePayload } from '../utils/api';
+import { WechatImport } from './WechatImport';
 
-interface Conversation { index: number; name: string; owner: string; speakers: string[]; count: number; isGroup: boolean; sample: { sender: string; text: string }[] }
+interface Conversation { index: number; name: string; owner: string; speakers: string[]; speakerNames?: Record<string, string>; count: number; isGroup: boolean; sample: { sender: string; text: string }[] }
 interface Preview { id?: string; conversations?: Conversation[]; warnings?: string[]; schema?: Record<string, string[]> }
 export const ImportHub: React.FC = () => {
   const { refreshProfiles, setActiveTab, setActiveProfileId, setMobileView, showToast, toggleLiveListening, profiles } = useApp();
@@ -51,12 +52,13 @@ export const ImportHub: React.FC = () => {
         <p className="text-sm text-neutral-500">先读取文件、确认发言人，再保存。导入不调用模型；只保留文字，跳过图片和表情包。</p>
       </div>
       <div className="grid grid-cols-3 gap-3">
-        {['选择导出文件', '确认会话与身份', '去重保存到本机'].map((label, i) => <div key={label} className={`p-3 rounded-xl border text-xs ${i === (conversation ? 1 : 0) ? 'border-indigo-500 bg-white dark:bg-neutral-900' : 'border-black/5 dark:border-white/10 text-neutral-500'}`}><span className="mr-2 font-mono">{i + 1}</span>{label}</div>)}
+        {['选择导入来源', '确认会话与身份', '去重保存到本机'].map((label, i) => <div key={label} className={`p-3 rounded-xl border text-xs ${i === (conversation ? 1 : 0) ? 'border-indigo-500 bg-white dark:bg-neutral-900' : 'border-black/5 dark:border-white/10 text-neutral-500'}`}><span className="mr-2 font-mono">{i + 1}</span>{label}</div>)}
       </div>
       {!preview && <>
+        <WechatImport onPreview={(data) => { setPreview(data); choose(0, data); }} />
         <div className="grid sm:grid-cols-2 gap-3">
           <button onClick={() => void toggleLiveListening()} className="p-4 rounded-xl border border-black/10 dark:border-white/10 text-left hover:border-indigo-500 transition-colors">
-            <span className="text-sm font-semibold">微信 WeChatEXP / QQ 导出工具</span><p className="text-xs text-neutral-500 mt-1">打开已有导出中心，导出文件后回到这里导入。</p>
+            <span className="text-sm font-semibold">QQ 导出工具</span><p className="text-xs text-neutral-500 mt-1">打开 QQ 导出中心；微信请使用上方一键导入。</p>
           </button>
           <div className="p-4 rounded-xl border border-black/10 dark:border-white/10"><span className="text-sm font-semibold">文件格式</span><p className="text-xs text-neutral-500 mt-1">ChatLab JSON / JSONL、TXT、CSV、HTML、明文 SQLite</p></div>
         </div>
@@ -79,7 +81,7 @@ export const ImportHub: React.FC = () => {
         <label className="block">选择会话<select aria-label="选择会话" className={control} value={index} onChange={(e) => choose(Number(e.target.value))}>{preview.conversations?.map((c, i) => <option key={i} value={i}>{c.name} · {c.count} 条文字{c.isGroup ? '（群聊，不能分析）' : ''}</option>)}</select></label>
         <label className="block">联系人备注<input aria-label="联系人备注" className={control} value={name} onChange={(e) => setName(e.target.value)} /></label>
         {!!profiles.length && <label className="block">保存到<select aria-label="保存到档案" className={control} value={destination} onChange={(e) => setDestination(e.target.value)}><option value="">新建档案（相同文件自动去重）</option>{profiles.map((p) => <option key={p.id} value={p.id}>追加到：{p.name}</option>)}</select><span className="text-neutral-500">追加时只选择同一个人，程序不会按文件名猜测联系人。</span></label>}
-        <div><p className="mb-2">哪位是你？</p><div className="flex flex-wrap gap-3">{conversation.speakers.map((speaker) => <button key={speaker} onClick={() => setSelf(speaker)} className={`flex items-center gap-2 p-3 rounded-xl border ${self === speaker ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/40' : 'border-black/10 dark:border-white/10'}`}><UserCheck size={15} />{speaker}{self === speaker && <CheckCircle2 size={15} />}</button>)}</div></div>
+        <div><p className="mb-2">哪位是你？</p><div className="flex flex-wrap gap-3">{conversation.speakers.map((speaker) => <button key={speaker} onClick={() => setSelf(speaker)} className={`flex items-center gap-2 p-3 rounded-xl border ${self === speaker ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/40' : 'border-black/10 dark:border-white/10'}`}><UserCheck size={15} />{conversation.speakerNames?.[speaker] || speaker}{self === speaker && <CheckCircle2 size={15} />}</button>)}</div></div>
         <div className="p-3 rounded-lg bg-neutral-50 dark:bg-neutral-800 space-y-2"><p className="font-semibold">真实文字预览 · 共 {conversation.count} 条</p>{conversation.sample.map((m, i) => <p key={i} className="text-neutral-500 whitespace-pre-wrap break-words">{m.sender}：{m.text}</p>)}</div>
         {preview.warnings?.map((warning) => <p key={warning} className="text-amber-600 dark:text-amber-400">{warning}</p>)}
         <div className="flex justify-between pt-4 border-t border-black/5 dark:border-white/10"><button disabled={busy} onClick={() => setPreview(null)} className="text-neutral-500">重新选择文件</button><button disabled={busy || !self || conversation.isGroup} onClick={() => void commit()} className="btn-sheen px-5 py-2 rounded-lg bg-indigo-600 text-white flex items-center gap-2 disabled:opacity-40">{busy && <Loader2 size={15} className="animate-spin" />}保存并进入工作台<ArrowRight size={15} /></button></div>

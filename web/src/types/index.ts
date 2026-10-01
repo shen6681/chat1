@@ -67,6 +67,13 @@ export interface AnalysisSummary {
   model: string;
 }
 
+export interface AffinityState {
+  score: number; initial: number; processed: number; pending: number; availableBatches: number;
+  batches: { id: string; before: number; delta: number; after: number; confidence: number;
+    summary: string; uncertainties: string[]; createdAt: string; model: string;
+    evidence: { entryId: number; quote: string; signal: string; speaker: string }[] }[];
+}
+
 export interface ContactProfile {
   id: string;
   name: string;

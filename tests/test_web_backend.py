@@ -64,6 +64,41 @@ class WebBackendTests(unittest.TestCase):
         self.assertEqual(1, len(self.service.store.profiles()))
         self.assertEqual(2, self.service.store.profile(identity).count)
 
+    def test_identity_preview_uses_member_names_without_changing_identity_keys(self):
+        data = {'chatlab': {'version': '0.0.2'}, 'meta': {'platform': 'weixin', 'ownerId': 'self'},
+                'members': [{'platformId': 'self', 'accountName': '我'}, {'platformId': 'peer', 'accountName': '小星'}],
+                'messages': [
+                    {'sender': 'self', 'type': 0, 'content': '合成文字一', 'timestamp': 1790841600},
+                    {'sender': 'peer', 'type': 0, 'content': '合成文字二', 'timestamp': 1790841601}]}
+        preview = self.request('/api/import/preview', {'name': 'names.json',
+            'data': base64.b64encode(json.dumps(data).encode()).decode()})
+        conversation = preview['conversations'][0]
+        self.assertEqual(['self', 'peer'], conversation['speakers'])
+        self.assertEqual({'self': '我', 'peer': '小星'}, conversation['speakerNames'])
+        self.assertEqual(['我', '小星'], [m['sender'] for m in conversation['sample']])
+
+    def test_affinity_requires_explicit_choice_and_keeps_jev_dimensions_separate(self):
+        identity = self.imported()
+        with self.assertRaises(HTTPError) as refused:
+            self.request('/api/jobs/affinity',{'profile':identity})
+        self.assertEqual(400,refused.exception.code)
+        page=self.request('/api/messages?profile='+identity)
+        self.assertEqual(50,page['affinity']['score'])
+        self.assertIsNone(page['analysis']['overallScore'])
+        self.service.settings = Settings(chat_key='synthetic-only')
+        job=self.request('/api/jobs/affinity',{'profile':identity,'calculate':True})
+        self.service.wait_task(job['id'])
+        result=self.request('/api/jobs/'+job['id'])
+        self.assertEqual('completed',result['state'])
+        self.assertEqual(50,result['affinity']['score'])
+
+    def test_guide_only_save_does_not_reencrypt_api_configuration(self):
+        self.service.settings=Settings(chat_key='synthetic-only')
+        self.service.config.save(self.service.settings)
+        before=self.service.config.path.read_bytes()
+        self.request('/api/settings',{'guideDone':True})
+        self.assertEqual(before,self.service.config.path.read_bytes())
+
     def test_keys_never_returned_or_cleared_by_untouched_fields(self):
         self.service.settings = Settings(chat_key='synthetic-only-key', jev_key='synthetic-jev')
         settings = self.request('/api/settings')

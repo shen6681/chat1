@@ -23,8 +23,11 @@ from .history_analysis import effective_rating, progress_summary, time_bounds
 from .history_runner import run_history
 from .importers import MAX_FILE, load_file, load_sqlite, sqlite_tables
 from .storage import SettingsStore
+from .affinity import AffinityStore
+from .affinity_runner import run_affinity
+from .wechat_workflow import WechatWorkflow
 
-VERSION = '2.7.0'
+VERSION = '2.8.0'
 SETTING_FIELDS = {'mode':'mode', 'chatUrl':'chat_url', 'chatModel':'chat_model',
     'jevUrl':'jev_url', 'jevModel':'jev_model', 'rememberKeys':'remember_keys',
     'autoAnalyze':'auto_analyze', 'interval':'interval', 'cooldown':'cooldown',
@@ -41,8 +44,10 @@ class LocalService:
         self.settings = self.config.load()
         self.config_stamp = self._settings_stamp()
         self.store = ArchiveStore(self.directory)
+        self.affinity = AffinityStore(self.store)
         self.lock = threading.RLock()
         self.previews, self.tasks, self.native = {}, {}, None
+        self.wechat = WechatWorkflow(self)
         self.preferences = dict(WEB_DEFAULTS)
         try:
             saved = json.loads((self.directory/'web-preferences.json').read_text(encoding='utf-8'))
@@ -86,7 +91,8 @@ class LocalService:
             preferences = {**self.preferences, **{k:body[k] for k in WEB_DEFAULTS if k in body}}
             if preferences['theme'] not in ('light','dark','system') or preferences['fontSize'] not in ('dense','default','relaxed'):
                 raise ValueError('外观选项无效。')
-            self.config.save(candidate)
+            if candidate != self.settings:
+                self.config.save(candidate)
             self.config_stamp = self._settings_stamp()
             temporary = self.directory/'web-preferences.tmp'
             temporary.write_text(json.dumps(preferences, ensure_ascii=False), encoding='utf-8')
@@ -116,7 +122,7 @@ class LocalService:
         boundary = max((effective_rating(e).get('boundary',0) for e in entries[-10:] if effective_rating(e)), default=0)
         return {'summary':f"当前范围共 {stats['total']} 条文字，已评分 {stats['analyzed']} 条。",
             'selfLogic':'点击消息后可按需解释；批量评分不会自动调用 DeepSeek。',
-            'otherLogic':'攻略进度来自已保存的文字互动信号，证据不足时不估算。',
+            'otherLogic':'六维互动积极度与好感度分开；好感度只在你主动选择后由 DeepSeek 计算。',
             'overallScore':stats['score'], 'boundaryAlert':boundary>=.8, 'boundaryProbability':boundary,
             'shouldWait':boundary>=.8, 'cautions':['互动分数不表示对方真实喜欢的概率。'], 'replies':[],
             'dimensions':[{'key':k,'name':v[0],'weight':v[1], 'description':v[2],
@@ -131,7 +137,7 @@ class LocalService:
         offset = max(0,int(query.get('offset',0))); limit = min(200,max(1,int(query.get('limit',100))))
         return {'profileId':profile, 'messages':[self.message_view(e) for e in entries[offset:offset+limit]],
             'total':len(entries), 'offset':offset, 'limit':limit, 'analysis':self.summary(entries),
-            'lastRun':self.store.last_run(profile)}
+            'lastRun':self.store.last_run(profile), 'affinity':self.affinity.view(profile,entries)}
 
     def preview_import(self, body):
         name = str(body.get('name','')).replace('\\','/').rsplit('/',1)[-1]
@@ -162,7 +168,8 @@ class LocalService:
         return {'id':identity,'warnings':bundle.warnings,'conversations':[
             {'index':i,'key':c.key,'name':c.name,'platform':c.platform,'owner':c.owner,
              'speakers':c.identities(),'count':len(c.messages),'isGroup':c.is_group,
-             'sample':[{'sender':m.sender,'text':m.text} for m in c.messages[:5]]}
+             'speakerNames':{m.sender:m.display_name or m.sender for m in c.messages},
+             'sample':[{'sender':m.display_name or m.sender,'text':m.text} for m in c.messages[:5]]}
              for i,c in enumerate(bundle.conversations)]}
 
     def commit_import(self, body):
@@ -177,6 +184,7 @@ class LocalService:
             if p and p.self_identity!=identity: raise ValueError('已有档案的我方身份与当前选择不同，请确认或新建档案。')
             if not p: p = self.store.create(name,c.platform,c.key,identity)
             added = self.store.import_messages(p.id,messages)
+            self.wechat.imported(body.get('importId'))
             return {'profileId':p.id,'added':added,'total':self.store.profile(p.id).count}
 
     def task_view(self, identity):
@@ -187,6 +195,8 @@ class LocalService:
     def wait_task(self, identity, timeout=180): self.tasks[identity]['thread'].join(timeout)
 
     def start_task(self, kind, body):
+        if kind=='affinity' and body.get('calculate') is not True:
+            raise ValueError('好感度不会自动计算，请主动选择计算后再开始。')
         profile = str(body.get('profile','')); self.store.profile(profile)
         with self.lock:
             self._refresh_settings()
@@ -249,6 +259,11 @@ class LocalService:
                         summary.update(summary=result.summary,selfLogic=result.self_logic,otherLogic=result.other_logic,
                             replies=result.replies,cautions=result.cautions,shouldWait=result.should_wait,model=result.source)
                         with self.lock: task.update(state='completed',analysis=summary)
+                    elif kind=='affinity':
+                        def affinity_progress(data):
+                            with self.lock: task.update(data)
+                        result = run_affinity(self.store,settings,profile,entries,task['cancel'],affinity_progress)
+                        with self.lock: task.update(state='paused' if task['cancel'].is_set() else 'completed',affinity=result)
                     else: raise ValueError('任务类型无效。')
                 except Exception as error:
                     with self.lock: task.update(state='error',error=self.safe_error(error))
@@ -267,6 +282,9 @@ class LocalService:
         if route=='/api/settings': return self.settings_view()
         if route=='/api/profiles': return {'profiles':[self.profile_view(p) for p in self.store.profiles()]}
         if route=='/api/messages': return self.messages(query)
+        if route=='/api/wechat/active': return self.wechat.active()
+        if route.startswith('/api/wechat/jobs/'):
+            return self.wechat.view(route.rsplit('/',1)[-1])
         if route.startswith('/api/jobs/'): return self.task_view(route.rsplit('/',1)[-1])
         if route=='/api/health': return {'version':VERSION,'storage':'SQLite','realBackend':True}
         raise ValueError('接口不存在。')
@@ -275,7 +293,7 @@ class LocalService:
         if route=='/api/settings': return self.save_settings(body)
         if route=='/api/import/preview': return self.preview_import(body)
         if route=='/api/import/commit': return self.commit_import(body)
-        if route.startswith('/api/jobs/') and route.rsplit('/',1)[-1] in ('score','explain','reply'):
+        if route.startswith('/api/jobs/') and route.rsplit('/',1)[-1] in ('score','explain','reply','affinity'):
             return self.start_task(route.rsplit('/',1)[-1],body)
         if route=='/api/jobs/pause':
             with self.lock:
@@ -300,12 +318,21 @@ class LocalService:
             candidate.validate()
             return {'message':check_connection(candidate,'chat' if provider=='DeepSeek' else 'jev')}
         if route=='/api/native': return self.native_workspace()
+        if route=='/api/wechat/dashboard':
+            from .wechat_client import open_dashboard
+            return open_dashboard()
+        if route=='/api/wechat/directory': return self.wechat.choices.choose(body.get('purpose'))
+        if route=='/api/wechat/scan': return self.wechat.scan()
+        if route=='/api/wechat/backup': return self.wechat.backup(body)
+        if route=='/api/wechat/export': return self.wechat.export(body)
+        if route=='/api/wechat/dismiss': return self.wechat.dismiss(body.get('id'))
         if route=='/api/open-archive':
             if os.name=='nt': os.startfile(str(self.directory))
             return {'opened':True}
         raise ValueError('接口不存在。')
 
     def close(self):
+        self.wechat.close()
         with self.lock:
             for task in self.tasks.values(): task['cancel'].set()
             threads = [task['thread'] for task in self.tasks.values()]

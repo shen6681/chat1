@@ -17,7 +17,7 @@ const AppContent: React.FC = () => {
   const { activeTab, mobileView, setMobileView } = useApp();
 
   return (
-    <div className="relative min-h-screen flex flex-col bg-[#f8f9fa] dark:bg-[#09090b] text-neutral-900 dark:text-neutral-100 transition-colors duration-200">
+    <div className="relative h-dvh overflow-hidden flex flex-col bg-[#f8f9fa] dark:bg-[#09090b] text-neutral-900 dark:text-neutral-100 transition-colors duration-200">
       {/* Ambient Top Light Beam (Linear / Raycast aesthetic) */}
       <div className="ambient-top-beam" />
 
@@ -25,7 +25,7 @@ const AppContent: React.FC = () => {
       <Header />
 
       {/* Main Workspace Area */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 min-h-0 flex overflow-hidden">
         {activeTab === "workspace" && (
           <div className="flex-1 flex flex-col lg:flex-row overflow-hidden w-full pb-14 lg:pb-0">
             {/* Desktop: Master Contact List */}

@@ -1,0 +1,75 @@
+{
+  "version": "2.8.0",
+  "real_api_requests": 0,
+  "synthetic_only": true,
+  "ok": true,
+  "manifest_hashes": true,
+  "crc": true,
+  "files": 951,
+  "zip_sha256": "7dfe66827bb9986a41fc4a79c8ec0cab2ebf8e170b8930892c3bdc34d027d5f1",
+  "native": {
+    "version": "2.8.0",
+    "package": "D:\\ChatReplyAssistant\\verification-temp\\v2.8.0 解压 验证\\chat1_便携版",
+    "hidden_desktop": true,
+    "real_api_requests": 0,
+    "self_test_exit": 0,
+    "self_test": {
+      "version": "2.8.0",
+      "synthetic_only": true,
+      "network_requests": 0,
+      "bundled_fonts": true,
+      "ocr": true,
+      "dpapi": true,
+      "guide_persistence": true,
+      "archive_import_live": true,
+      "history_checkpoint": true,
+      "batch_checkpoint": true,
+      "explanation_persistence": true,
+      "ok": true
+    },
+    "gui_exit": 0,
+    "gui_dimensions": [
+      1360,
+      920
+    ],
+    "shortcut_exit": 0,
+    "fresh_archive_empty": true,
+    "ok": true
+  },
+  "webview2": {
+    "ok": true,
+    "synthetic_only": true,
+    "real_api_requests": 0,
+    "shell": "WebView2",
+    "native_window_visible": true,
+    "quit_closes_window": true,
+    "empty_user_data": true,
+    "no_python_path": true,
+    "official_reader_empty_backup": true,
+    "packaged_browser_child": true,
+    "no_real_backup": true
+  },
+  "web": [
+    {
+      "mode": "exe",
+      "startup": true,
+      "real_import": true,
+      "compiled_assets_match": true,
+      "fonts": 4,
+      "settings_encrypted": true,
+      "api_guard": true
+    },
+    {
+      "mode": "cmd",
+      "startup": true,
+      "real_import": true,
+      "compiled_assets_match": true,
+      "fonts": 4,
+      "settings_encrypted": true,
+      "api_guard": true
+    }
+  ],
+  "empty_initial_archive": true,
+  "no_shared_api_keys": true,
+  "no_python_required": true
+}

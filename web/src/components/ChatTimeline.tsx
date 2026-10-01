@@ -104,7 +104,7 @@ export const ChatTimeline: React.FC = () => {
         const ratingText = m.rating
           ? m.speaker === "我"
             ? `[我方评分: ${m.rating.score ?? "待评估"}/100]`
-            : `[对方好感变化: ${m.rating.affinityDelta && m.rating.affinityDelta > 0 ? "+" : ""}${m.rating.affinityDelta ?? "中性"}]`
+            : `[对方互动变化: ${m.rating.affinityDelta && m.rating.affinityDelta > 0 ? "+" : ""}${m.rating.affinityDelta ?? "中性"}]`
           : "";
         return `${idx + 1}. [${m.timestamp}] **${m.speaker}**：${m.text} ${ratingText}`;
       }),
@@ -293,7 +293,7 @@ export const ChatTimeline: React.FC = () => {
                               : "bg-neutral-100 dark:bg-neutral-800 text-neutral-500 border-neutral-200 dark:border-neutral-700"
                           }`}
                         >
-                          <span>好感度:</span>
+                          <span>互动变化:</span>
                           <strong>
                             {m.rating.affinityDelta && m.rating.affinityDelta > 0 ? "+" : ""}
                             {m.rating.affinityDelta}

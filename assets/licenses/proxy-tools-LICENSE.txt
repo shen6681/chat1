@@ -1,0 +1,20 @@
+Package: proxy-tools 0.1.0
+License declared by upstream: MIT
+Author: Jonathan Tushman
+Homepage: http://github.com/jtushman/proxy_tools
+The upstream sdist does not include a separate license text. Original package metadata is retained below.
+
+Metadata-Version: 1.1
+Name: proxy_tools
+Version: 0.1.0
+Summary: Proxy Implementation
+Home-page: http://github.com/jtushman/proxy_tools
+Author: Jonathan Tushman
+Author-email: jonathan@zefr.com
+License: MIT
+Description: UNKNOWN
+Platform: UNKNOWN
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3

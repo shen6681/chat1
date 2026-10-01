@@ -17,6 +17,7 @@ import {
 import confetti from "canvas-confetti";
 import { sound } from "../utils/sound";
 import { triggerRipple } from "../utils/ripple";
+import { AffinityPanel } from './AffinityPanel';
 
 export const Inspector: React.FC = () => {
   const {
@@ -113,6 +114,7 @@ export const Inspector: React.FC = () => {
       </div>
 
       <div className="p-4 space-y-5">
+        <AffinityPanel />
         {/* Selected Message Deep-Dive Callout */}
         {selectedMessage && (selectedMessage.explanation || selectedMessage.rating) && (
           <div className="p-3.5 rounded-xl bg-indigo-500/5 dark:bg-indigo-500/10 border border-indigo-500/20 space-y-2 animate-fadeIn">

@@ -1,0 +1,22 @@
+
+> web@0.0.0 build
+> tsc -b && vite build
+
+vite v8.3.1 building client environment for production...
+transforming...
+
+/fonts/ZCOOLXiaoWei-Regular.ttf referenced in /fonts/ZCOOLXiaoWei-Regular.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/fonts/MaShanZheng-Regular.ttf referenced in /fonts/MaShanZheng-Regular.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/fonts/LXGWWenKaiLite-Regular.ttf referenced in /fonts/LXGWWenKaiLite-Regular.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/fonts/ZCOOLKuaiLe-Regular.ttf referenced in /fonts/ZCOOLKuaiLe-Regular.ttf didn't resolve at build time, it will remain unchanged to be resolved at runtime
+✓ 1907 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   1.44 kB │ gzip:   0.85 kB
+dist/assets/index-B6PEiR-Y.css   78.53 kB │ gzip:  12.28 kB
+dist/assets/index-D_rZV8R7.js   342.96 kB │ gzip: 105.12 kB
+
+✓ built in 276ms

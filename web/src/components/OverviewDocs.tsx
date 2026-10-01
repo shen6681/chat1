@@ -1,12 +1,12 @@
 import React from "react";
 import { useApp } from '../context/AppContext';
-import { 
-  BrainCircuit, 
-  Compass, 
-  Lock, 
-  Sparkles, 
-  CheckCircle2, 
-  AlertCircle 
+import {
+  BrainCircuit,
+  Compass,
+  Lock,
+  Sparkles,
+  CheckCircle2,
+  AlertCircle
 } from "lucide-react";
 
 export const OverviewDocs: React.FC = () => {
@@ -67,8 +67,8 @@ export const OverviewDocs: React.FC = () => {
               { name: "亲近表达 (20%)", desc: "双方接纳的针对个人的亲昵语气词、专属性称呼与共同记忆。" },
               { name: "实际行动 (10%)", desc: "提出或确认具体碰面时间、协助执行某项事务的实质性动作。" },
             ].map((d, i) => (
-              <div 
-                key={i} 
+              <div
+                key={i}
                 onMouseMove={handleMouseMove}
                 className="spotlight-card p-3.5 rounded-xl bg-white dark:bg-neutral-900/90 border border-black/[0.06] dark:border-white/[0.07] hover:border-indigo-500/40 transition-all space-y-1"
               >
@@ -122,7 +122,7 @@ export const OverviewDocs: React.FC = () => {
                 DeepSeek (Chat Completions)
               </span>
               <p className="text-xs text-neutral-500 leading-relaxed">
-                专长于深度语义解构与高质量回复建议生成。提供 3 种不同情绪温度的建议选项，并按需对特定单条消息给出逻辑阐释。
+                按需解释单条或多选消息、生成回复建议。好感度独立从50起，主动选择后每100条分析变化及原文依据，批次和断点保存在本机。
               </p>
             </div>
           </div>
@@ -140,7 +140,7 @@ export const OverviewDocs: React.FC = () => {
           <div className="space-y-3 text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">
             <div className="flex items-start gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-              <span><strong>本地 SQLite 存储</strong>：聊天原文、评分和任务检查点保存在本机 <code>archives.sqlite3</code>。导入不联网；主动评分、解释或生成回复时，会向所选API发送相应文字与有限上下文。</span>
+              <span><strong>本地 SQLite 存储</strong>：聊天原文、评分和任务检查点保存在本机 <code>archives.sqlite3</code>。导入不联网；主动评分、计算好感度、解释或生成回复时，会向所选API发送相应文字与有限上下文。</span>
             </div>
             <div className="flex items-start gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />

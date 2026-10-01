@@ -78,3 +78,17 @@ React / React DOM, lucide-react, canvas-confetti, clsx, tailwind-merge and Tailw
 retain their MIT licenses under web/licenses in source and licenses/web in the release.
 The frontend uses the existing pinned package-lock.json; development dependencies
 are not required to launch the portable program.
+
+Native WebView2 shell adapts the UI branch contribution by Yangfan Hu, commit
+f699a7cd5c1d195ed69d25415dddd551613fd2cd, using the existing authenticated backend.
+pywebview 5.1, pythonnet 3.0.5, clr_loader, cffi and bottle retain their original
+licenses in licenses/ in the Windows distribution. proxy-tools and typing_extensions
+also retain their installed upstream license files. Microsoft Edge WebView2 and .NET
+are system runtimes and are not redistributed by this application.
+
+The full pythonnet/clr_loader license texts missing from their binary wheel metadata
+are retained from hash-verified official PyPI source distributions under
+assets/licenses in source and licenses/native-runtime in the release. proxy-tools
+0.1.0 declares MIT but its sdist has no separate license file; its original package
+metadata is retained there. Source URLs and SHA256 are in python-runtime-provenance.json.
+pywebview 5.1 retains its upstream BSD 3-Clause license from the installed wheel.

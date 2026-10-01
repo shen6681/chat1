@@ -295,7 +295,7 @@ class AssistantApp:
         bottom.pack(side="bottom", fill="x", padx=18, pady=24)
         label(bottom, "●  本地档案 · 本地 OCR", 9, TEAL).pack(anchor="w")
         label(bottom, "分析时使用你选择的 API\n聊天档案保存在这台电脑", 8, MUTED).pack(anchor="w", pady=(9, 12))
-        label(bottom,"聊有据  2.7.0",8,MUTED).pack(anchor="w")
+        label(bottom,"聊有据  2.8.0",8,MUTED).pack(anchor="w")
         statusbar = tk.Frame(self.main_area, bg=PANEL,highlightthickness=1,highlightbackground=BORDER)
         statusbar.pack(side="bottom", fill="x", padx=18, pady=(0, 14))
         tk.Label(statusbar, textvariable=self.status, bg=PANEL, fg=MUTED, anchor="w", font=(FONT, 9), padx=12, pady=10, wraplength=870).pack(fill="x")

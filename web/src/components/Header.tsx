@@ -1,7 +1,6 @@
 import React, { useState, useRef, useLayoutEffect } from "react";
 import { useApp } from "../context/AppContext";
 import {
-  Search,
   Settings,
   Sun,
   Moon,
@@ -24,7 +23,6 @@ export const Header: React.FC = () => {
     setActiveTab,
     isLiveListening,
     toggleLiveListening,
-    setCommandPaletteOpen,
     setSettingsOpen, settings, updateSettings, ready
   } = useApp();
 
@@ -96,7 +94,7 @@ export const Header: React.FC = () => {
               聊有据
             </span>
             <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10 text-neutral-500 dark:text-neutral-400 border border-black/[0.04] dark:border-white/[0.06]">
-              v2.7
+              v2.8
             </span>
           </div>
         </div>
@@ -150,7 +148,7 @@ export const Header: React.FC = () => {
               ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.25)] animate-pulseHalo"
               : "bg-neutral-50 dark:bg-neutral-900/60 border-black/[0.06] dark:border-white/[0.08] text-neutral-600 dark:text-neutral-400 hover:border-black/[0.12] dark:hover:border-white/[0.16]"
           }`}
-          title="打开实际屏幕读取与QQ/微信导出工作台"
+          title="打开屏幕读取与QQ导出工作台"
         >
           <span className="relative flex h-2 w-2">
             {isLiveListening && (
@@ -158,23 +156,7 @@ export const Header: React.FC = () => {
             )}
             <span className={`relative inline-flex rounded-full h-2 w-2 ${isLiveListening ? "bg-emerald-500" : "bg-neutral-400"}`}></span>
           </span>
-          <span>屏幕与导出工具</span>
-        </button>
-
-        {/* Command Palette Trigger with Ripple */}
-        <button
-          onClick={(e) => {
-            triggerRipple(e);
-            sound.playPop();
-            setCommandPaletteOpen(true);
-          }}
-          className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs bg-neutral-100 dark:bg-neutral-900 border border-black/[0.05] dark:border-white/[0.08] text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 hover:border-black/[0.12] dark:hover:border-white/[0.16] transition-all"
-        >
-          <Search className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">搜索与操作</span>
-          <kbd className="hidden sm:inline-flex items-center gap-0.5 text-[10px] font-mono px-1 py-0.2 rounded bg-black/5 dark:bg-white/10 text-neutral-400">
-            <span>⌘</span>K
-          </kbd>
+          <span>屏幕读取</span>
         </button>
 
         {/* Audio Haptics Toggle with Ripple */}

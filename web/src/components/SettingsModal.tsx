@@ -6,7 +6,7 @@ import type { SettingsConfig } from '../types';
 
 const fonts = [['Microsoft YaHei UI', '微软雅黑'], ['LXGW WenKai Lite', '霞鹜文楷 · 温柔手写'], ['ZCOOL KuaiLe', '站酷快乐体 · 俏皮圆润'], ['ZCOOL XiaoWei', '站酷小薇体 · 清秀书卷'], ['Ma Shan Zheng', '马善政楷书 · 笔墨手写'], ['SimSun', '宋体'], ['KaiTi', '楷体']];
 function SettingsForm() {
-  const { settings, setSettingsOpen, updateSettings, showToast } = useApp();
+  const { settings, setSettingsOpen, updateSettings, showToast, setCommandPaletteOpen } = useApp();
   const [draft, setDraft] = useState({ ...settings });
   const [busy, setBusy] = useState(false); const [testing, setTesting] = useState('');
   const change = <K extends keyof SettingsConfig>(key: K, value: SettingsConfig[K]) => setDraft((s) => ({ ...s, [key]: value }));
@@ -28,7 +28,7 @@ function SettingsForm() {
         <section className={section}>
           <h3 className="font-semibold">分析模型与表达偏好</h3>
           <label className="block">评分模式<select aria-label="评分模式" className={control} value={draft.mode} onChange={(e) => change('mode', e.target.value as SettingsConfig['mode'])}>{['TypeSafe Jev', 'Jev + DeepSeek', 'DeepSeek'].map((mode) => <option key={mode}>{mode}</option>)}</select></label>
-          <p className="text-neutral-500">Jev 模式批量评分每10条保存一次。DeepSeek 仅在你主动解释或生成回复时调用；单独选择 DeepSeek 模式也可用于评分。</p>
+          <p className="text-neutral-500">Jev 模式批量评分每10条保存一次。DeepSeek 在你主动计算好感度、解释消息或生成回复时调用；单独选择 DeepSeek 模式也可用于评分。</p>
           <div className="grid sm:grid-cols-2 gap-3"><label>表达风格<input aria-label="表达风格" className={control} value={draft.style || ''} onChange={(e) => change('style', e.target.value)} /></label><label>沟通目标<input aria-label="沟通目标" className={control} value={draft.goal || ''} onChange={(e) => change('goal', e.target.value)} /></label></div>
           <div className="grid sm:grid-cols-2 gap-3"><label>读取间隔（秒）<input type="number" min={1} max={30} className={control} value={draft.interval} onChange={(e) => change('interval', Number(e.target.value))} /></label><label>请求间隔（秒）<input type="number" min={3} max={120} className={control} value={draft.cooldown} onChange={(e) => change('cooldown', Number(e.target.value))} /></label></div>
           <label className="flex gap-2"><input type="checkbox" checked={draft.autoAnalyze} onChange={(e) => change('autoAnalyze', e.target.checked)} />屏幕工作台自动分析新文字</label>
@@ -53,6 +53,7 @@ function SettingsForm() {
           <p className="text-neutral-500 flex gap-2"><Lock size={14} />密钥使用当前 Windows 用户 DPAPI 加密；浏览器不保存密钥和聊天原文。</p>
         </details>
       </div>
+      <div className="px-6 pb-3"><button onClick={() => { setSettingsOpen(false); setCommandPaletteOpen(true); }} className="text-xs text-neutral-400 hover:text-indigo-500">更多操作 · Ctrl+K</button></div>
       <footer className="px-6 py-4 border-t border-black/5 dark:border-white/10 flex justify-end gap-4"><button disabled={busy} onClick={() => setSettingsOpen(false)} className="text-sm text-neutral-500">取消</button><button disabled={busy} onClick={() => void save()} className="btn-sheen px-5 py-2 rounded-lg bg-indigo-600 text-white text-sm flex items-center gap-2">{busy ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}保存设置</button></footer>
     </section>
   </div>;
