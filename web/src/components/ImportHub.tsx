@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useApp } from "../context/AppContext";
 import { 
   FileUp, 
@@ -21,6 +21,62 @@ export const ImportHub: React.FC = () => {
   const [detectedSpeakers, setDetectedSpeakers] = useState<string[]>(["我 (User_01)", "对方 (Shen_6681)"]);
   const [selfChoice, setSelfChoice] = useState<string>("我 (User_01)");
   const [previewCount, setPreviewCount] = useState<number>(142);
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const processUploadedFile = (file: File) => {
+    sound.playPop();
+    const cleanName = file.name.replace(/\.[^/.]+$/, "");
+    setImportedName(cleanName || "新导入会话");
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = (event.target?.result as string) || "";
+      try {
+        if (file.name.endsWith(".json")) {
+          const parsed = JSON.parse(text);
+          if (Array.isArray(parsed)) {
+            setPreviewCount(parsed.length);
+          } else if (parsed.messages && Array.isArray(parsed.messages)) {
+            setPreviewCount(parsed.messages.length);
+          } else {
+            setPreviewCount(Math.min(text.split("\n").length, 300));
+          }
+        } else {
+          const lines = text.split("\n").filter((l) => l.trim().length > 0);
+          setPreviewCount(lines.length || 50);
+        }
+      } catch {
+        setPreviewCount(Math.min(text.split("\n").length, 120));
+      }
+      setDetectedSpeakers([`${cleanName} (对方)`, "我 (我方视角)"]);
+      setSelfChoice("我 (我方视角)");
+      setStep(2);
+      showToast(`已成功读取文件「${file.name}」，请确认双方发言人身份`, "success");
+    };
+    reader.readAsText(file);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) processUploadedFile(file);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) processUploadedFile(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
 
   const handleLoadDemoFile = (e: React.MouseEvent) => {
     triggerRipple(e);
@@ -174,15 +230,32 @@ export const ImportHub: React.FC = () => {
               ))}
             </div>
 
-            {/* Dropzone Container */}
-            <div className="border-2 border-dashed border-black/[0.1] dark:border-white/[0.12] rounded-2xl p-10 text-center bg-white/40 dark:bg-neutral-900/30 hover:border-indigo-500/50 transition-all space-y-4">
+            {/* Dropzone Container with Real File Picker & Drag-and-Drop */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept=".json,.jsonl,.txt,.csv,.sqlite3"
+              className="hidden"
+            />
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className={`border-2 border-dashed rounded-2xl p-10 text-center transition-all space-y-4 cursor-pointer select-none ${
+                isDragging
+                  ? "border-indigo-500 bg-indigo-50/20 dark:bg-indigo-950/20 scale-[1.01]"
+                  : "border-black/[0.1] dark:border-white/[0.12] bg-white/40 dark:bg-neutral-900/30 hover:border-indigo-500/50"
+              }`}
+            >
               <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 mx-auto flex items-center justify-center">
                 <Upload className="w-6 h-6 stroke-[1.75]" />
               </div>
 
               <div className="space-y-1">
                 <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                  点击浏览文件，或将聊天导出文件拖拽至此
+                  点击浏览本地文件，或将聊天导出文件拖拽至此
                 </p>
                 <p className="text-xs text-neutral-400">
                   支持 .json, .jsonl, .txt, .csv, .sqlite3 (单文件上限 150MB，最高 30 万条记录)
@@ -191,7 +264,11 @@ export const ImportHub: React.FC = () => {
 
               <div className="pt-2 flex items-center justify-center gap-3">
                 <button
-                  onClick={(e) => handleLoadDemoFile(e)}
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleLoadDemoFile(e);
+                  }}
                   className="btn-sheen px-4 py-2 rounded-lg bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-medium text-xs hover:bg-neutral-800 dark:hover:bg-neutral-100 active:scale-95 transition-all shadow-[0_0_15px_rgba(99,102,241,0.2)] flex items-center gap-1.5"
                 >
                   <Sparkles className="w-3.5 h-3.5 text-indigo-400 dark:text-indigo-600" />

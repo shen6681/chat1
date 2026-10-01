@@ -113,20 +113,22 @@ export const Inspector: React.FC = () => {
 
       <div className="p-4 space-y-5">
         {/* Selected Message Deep-Dive Callout */}
-        {selectedMessage && selectedMessage.explanation && (
+        {selectedMessage && (selectedMessage.explanation || selectedMessage.rating) && (
           <div className="p-3.5 rounded-xl bg-indigo-500/5 dark:bg-indigo-500/10 border border-indigo-500/20 space-y-2 animate-fadeIn">
             <div className="flex items-center justify-between text-[11px] font-medium text-indigo-600 dark:text-indigo-400">
               <span className="flex items-center gap-1.5">
                 <MessageSquareQuote className="w-3.5 h-3.5" />
-                <span>已选中消息 · 深度溯源</span>
+                <span>已选中消息 · 深度剖析</span>
               </span>
-              <span className="font-mono text-[10px]">{selectedMessage.speaker}</span>
+              <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 font-medium">
+                {selectedMessage.speaker}
+              </span>
             </div>
             <p className="text-xs text-neutral-700 dark:text-neutral-300 italic border-l-2 border-indigo-500/40 pl-2">
               “{selectedMessage.text}”
             </p>
             <p className="text-xs leading-relaxed text-neutral-600 dark:text-neutral-400">
-              {selectedMessage.explanation.text}
+              {selectedMessage.explanation?.text || selectedMessage.rating?.reason || "该条消息已纳入当前会话的六维积极度模型进行语境计算。"}
             </p>
           </div>
         )}

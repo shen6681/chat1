@@ -48,6 +48,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       if (params.get("theme") === "light") return "light";
+      if (params.get("theme") === "dark") return "dark";
+      try {
+        const saved = localStorage.getItem("chat1_theme");
+        if (saved === "light" || saved === "dark") return saved;
+      } catch {}
     }
     return "dark";
   });
@@ -70,9 +75,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
   const [mobileView, setMobileView] = useState<"contacts" | "chat" | "inspector">("contacts");
-  const [profiles, setProfiles] = useState<ContactProfile[]>(MOCK_PROFILES);
+  
+  const [profiles, setProfiles] = useState<ContactProfile[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("chat1_profiles");
+        if (saved) return JSON.parse(saved);
+      } catch {}
+    }
+    return MOCK_PROFILES;
+  });
+
   const [activeProfileId, setActiveProfileId] = useState<string>("p1");
-  const [conversations, setConversations] = useState<Record<string, MessageItem[]>>(MOCK_CONVERSATIONS);
+
+  const [conversations, setConversations] = useState<Record<string, MessageItem[]>>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("chat1_conversations");
+        if (saved) return JSON.parse(saved);
+      } catch {}
+    }
+    return MOCK_CONVERSATIONS;
+  });
+
   const [analysisMap, setAnalysisMap] = useState<Record<string, AnalysisSummary>>(MOCK_ANALYSIS_SUMMARY);
   const [selectedMessageId, setSelectedMessageId] = useState<string | number | null>(null);
   
@@ -91,10 +116,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return false;
   });
   const [importModalOpen, setImportModalOpen] = useState<boolean>(false);
-  const [settings, setSettings] = useState<SettingsConfig>(INITIAL_SETTINGS);
+
+  const [settings, setSettings] = useState<SettingsConfig>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("chat1_settings");
+        if (saved) return { ...INITIAL_SETTINGS, ...JSON.parse(saved) };
+      } catch {}
+    }
+    return INITIAL_SETTINGS;
+  });
+
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
-  // Apply dark mode class to document element
+  // Apply dark mode class to document element and persist
   useEffect(() => {
     const root = document.documentElement;
     if (theme === "dark") {
@@ -104,7 +139,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       root.classList.remove("dark");
       root.setAttribute("data-theme", "light");
     }
+    try {
+      localStorage.setItem("chat1_theme", theme);
+    } catch {}
   }, [theme]);
+
+  // Persist profiles and conversations
+  useEffect(() => {
+    try {
+      localStorage.setItem("chat1_profiles", JSON.stringify(profiles));
+    } catch {}
+  }, [profiles]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("chat1_conversations", JSON.stringify(conversations));
+    } catch {}
+  }, [conversations]);
 
   // Global keyboard shortcuts (Cmd+K / Ctrl+K, Esc)
   useEffect(() => {
@@ -202,7 +253,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateSettings = (newSettings: Partial<SettingsConfig>) => {
-    setSettings((prev) => ({ ...prev, ...newSettings }));
+    setSettings((prev) => {
+      const updated = { ...prev, ...newSettings };
+      try {
+        localStorage.setItem("chat1_settings", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
     showToast("偏好设置已更新并保存至本地 DPAPI 加密存储", "success");
   };
 

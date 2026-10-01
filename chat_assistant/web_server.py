@@ -16,16 +16,27 @@ class SPAHandler(SimpleHTTPRequestHandler):
         super().__init__(*args, directory=directory, **kwargs)
 
     def do_GET(self):
+        # Strict security: verify requested path cannot escape self.directory
         path = self.translate_path(self.path)
-        if not os.path.exists(path) or os.path.isdir(path):
-            index_path = os.path.join(self.directory, "index.html")
-            if os.path.exists(index_path):
+        base = Path(self.directory).resolve()
+        target = Path(path).resolve()
+
+        if base not in target.parents and target != base:
+            self.send_error(403, "Access Denied: Path traversal prohibited.")
+            return
+
+        if not target.exists() or target.is_dir():
+            index_path = base / "index.html"
+            if index_path.exists():
                 self.path = "/index.html"
         return super().do_GET()
 
     def end_headers(self):
-        # Enable CORS and disable aggressive caching for local development
+        # Security & Performance headers
         self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("X-Frame-Options", "SAMEORIGIN")
+        self.send_header("X-XSS-Protection", "1; mode=block")
         self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
         super().end_headers()
 
