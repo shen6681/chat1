@@ -1,0 +1,101 @@
+export type Speaker = "我" | "对方" | "未确认";
+
+export type Platform = "微信" | "QQ" | "ChatLab" | "CSV" | "SQLite";
+
+export interface MessageItem {
+  id: string | number;
+  speaker: Speaker;
+  text: string;
+  timestamp: string;
+  senderName?: string;
+  confidence?: number;
+  messageId?: string;
+  // Analysis metadata
+  rating?: {
+    speaker: Speaker;
+    score?: number | null; // 我方评级 0-100 (SSS-D)
+    affinityDelta?: number | null; // 对方好感变化 -2 to +2
+    confidence: number;
+    boundary: number; // 0 to 1
+    reason: string;
+    source?: string;
+  };
+  issue?: {
+    kind: string;
+    reason: string;
+  };
+  explanation?: {
+    text: string;
+    source: string;
+    createdAt: string;
+  };
+  emotion?: { label: string; probability: number }[];
+  intent?: { label: string; probability: number }[];
+}
+
+export interface DimensionMetric {
+  name: string;
+  key: string;
+  weight: number;
+  score: number | null; // 0 - 100
+  confidence: number; // 0 - 1
+  evidence: string;
+  description: string;
+}
+
+export interface ReplySuggestion {
+  style: string;
+  text: string;
+  reason: string;
+  tag?: string;
+}
+
+export interface AnalysisSummary {
+  summary: string;
+  selfLogic: string;
+  otherLogic: string;
+  overallScore: number | null;
+  boundaryAlert: boolean;
+  boundaryProbability: number;
+  shouldWait: boolean;
+  cautions: string[];
+  replies: ReplySuggestion[];
+  dimensions: DimensionMetric[];
+  evaluatedAt: string;
+  model: string;
+}
+
+export interface ContactProfile {
+  id: string;
+  name: string;
+  platform: Platform;
+  avatarText: string;
+  avatarBg: string;
+  conversationKey: string;
+  selfIdentity: string;
+  messageCount: number;
+  lastActive: string;
+  healthSignal: number; // 0 - 100
+  signalLabel: string;
+  unreadCount?: number;
+  notes?: string;
+}
+
+export interface SettingsConfig {
+  mode: "DeepSeek" | "TypeSafe Jev" | "Jev + DeepSeek";
+  chatUrl: string;
+  chatModel: string;
+  chatKey: string;
+  jevUrl: string;
+  jevModel: string;
+  jevKey: string;
+  rememberKeys: boolean;
+  useDpapi: boolean;
+  autoAnalyze: boolean;
+  interval: number;
+  cooldown: number;
+  fontSize: "dense" | "default" | "relaxed";
+  theme: "dark" | "light" | "system";
+  reducedMotion: boolean;
+  hapticSound: boolean;
+}

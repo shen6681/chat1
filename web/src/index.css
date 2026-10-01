@@ -1,0 +1,220 @@
+@import "tailwindcss";
+
+@variant dark (&:where(.dark, .dark *, [data-theme="dark"], [data-theme="dark"] *));
+
+@layer base {
+  :root {
+    --background: #f8f9fa;
+    --surface: #ffffff;
+    --surface-elevated: #f3f4f6;
+    --surface-hover: #ebeef3;
+    --border: rgba(0, 0, 0, 0.08);
+    --border-hover: rgba(0, 0, 0, 0.16);
+    --border-active: rgba(0, 0, 0, 0.28);
+    
+    --text-primary: #0f172a;
+    --text-secondary: rgba(15, 23, 42, 0.65);
+    --text-tertiary: rgba(15, 23, 42, 0.42);
+
+    --accent: #5551ff;
+    --accent-hover: #433fe0;
+    --accent-subtle: rgba(85, 81, 255, 0.08);
+    --accent-border: rgba(85, 81, 255, 0.25);
+    --accent-text: #433fe0;
+
+    --positive: #10b981;
+    --positive-subtle: rgba(16, 185, 129, 0.1);
+    --warning: #f59e0b;
+    --warning-subtle: rgba(245, 158, 11, 0.1);
+    --danger: #f43f5e;
+    --danger-subtle: rgba(244, 63, 94, 0.1);
+
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 18px;
+
+    --shadow-subtle: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+    --shadow-card: 0 4px 12px -2px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    --shadow-dropdown: 0 12px 28px -4px rgba(0, 0, 0, 0.08), 0 4px 12px -2px rgba(0, 0, 0, 0.04);
+  }
+
+  .dark {
+    --background: #09090b;
+    --surface: #111114;
+    --surface-elevated: #18181c;
+    --surface-hover: #222228;
+    --border: rgba(255, 255, 255, 0.08);
+    --border-hover: rgba(255, 255, 255, 0.16);
+    --border-active: rgba(255, 255, 255, 0.28);
+
+    --text-primary: #f4f4f6;
+    --text-secondary: rgba(244, 244, 246, 0.65);
+    --text-tertiary: rgba(244, 244, 246, 0.38);
+
+    --accent: #6366f1;
+    --accent-hover: #7579f8;
+    --accent-subtle: rgba(99, 102, 241, 0.12);
+    --accent-border: rgba(99, 102, 241, 0.3);
+    --accent-text: #a5b4fc;
+
+    --positive: #10b981;
+    --positive-subtle: rgba(16, 185, 129, 0.15);
+    --warning: #f59e0b;
+    --warning-subtle: rgba(245, 158, 11, 0.15);
+    --danger: #f43f5e;
+    --danger-subtle: rgba(244, 63, 94, 0.15);
+
+    --shadow-subtle: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+    --shadow-card: 0 4px 14px -2px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+    --shadow-dropdown: 0 16px 36px -4px rgba(0, 0, 0, 0.7), 0 4px 16px -2px rgba(0, 0, 0, 0.5);
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+}
+
+/* Custom scrollbars that feel like Linear / Raycast */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-hover);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-active);
+}
+
+/* Subtle Keyframe Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes borderRotate {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 220ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slideUp {
+  animation: slideUp 260ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-pulseGlow {
+  animation: pulseGlow 2.4s ease-in-out infinite;
+}
+
+/* Ambient Top Light Beam */
+.ambient-top-beam {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 1200px;
+  height: 240px;
+  background: radial-gradient(ellipse 65% 50% at 50% 0%, rgba(99, 102, 241, 0.14), transparent 75%);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.dark .ambient-top-beam {
+  background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(99, 102, 241, 0.22), transparent 80%);
+}
+
+/* Linear-style Spotlight Card */
+.spotlight-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.spotlight-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(
+    400px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(99, 102, 241, 0.1),
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.spotlight-card:hover::before {
+  opacity: 1;
+}
+
+/* Glowing Border Beam for Primary Recommended Card */
+.border-beam-card {
+  position: relative;
+  background: linear-gradient(var(--surface), var(--surface)) padding-box,
+              linear-gradient(90deg, rgba(99, 102, 241, 0.6), rgba(168, 85, 247, 0.6), rgba(16, 185, 129, 0.6), rgba(99, 102, 241, 0.6)) border-box;
+  background-size: 300% 300%;
+  animation: borderRotate 6s ease infinite;
+}
+
+.dark .border-beam-card {
+  background: linear-gradient(#141418, #141418) padding-box,
+              linear-gradient(90deg, rgba(99, 102, 241, 0.7), rgba(168, 85, 247, 0.7), rgba(16, 185, 129, 0.7), rgba(99, 102, 241, 0.7)) border-box;
+  background-size: 300% 300%;
+  animation: borderRotate 6s ease infinite;
+}
+
+
