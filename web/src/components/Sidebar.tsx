@@ -98,7 +98,7 @@ export const Sidebar: React.FC = () => {
         {/* Filter Pills with Sliding Glider */}
         <div className="relative flex items-center p-0.5 rounded-md bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.06] w-fit">
           <div
-            className="absolute top-0.5 bottom-0.5 rounded bg-white dark:bg-neutral-800 shadow-2xs transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none"
+            className="absolute top-0.5 bottom-0.5 rounded bg-white dark:bg-[#1c1d22] shadow-2xs border border-black/[0.06] dark:border-white/[0.1] transition-all duration-250 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none"
             style={{
               transform: `translateX(${gliderStyle.left}px)`,
               width: `${gliderStyle.width}px`,
@@ -109,10 +109,10 @@ export const Sidebar: React.FC = () => {
               key={key}
               ref={(el) => { filterRefs.current[key] = el; }}
               onClick={(e) => handleSelectFilter(e, key)}
-              className={`relative z-10 px-2.5 py-0.5 rounded text-[11px] font-medium transition-colors duration-200 active:scale-95 ${
+              className={`relative z-10 px-2.5 py-0.5 rounded text-[11px] font-medium transition-colors duration-150 active:scale-95 ${
                 platformFilter === key
-                  ? "text-neutral-900 dark:text-white font-semibold"
-                  : "text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200"
+                  ? "text-neutral-900 dark:text-white"
+                  : "text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-300"
               }`}
             >
               {key === "all" ? "全部" : key}

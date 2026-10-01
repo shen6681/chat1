@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useLayoutEffect } from "react";
 import { useApp } from "../context/AppContext";
 import { 
   Sparkles, 
@@ -29,13 +29,24 @@ export const ChatTimeline: React.FC = () => {
   const [filterRating, setFilterRating] = useState<"all" | "scored" | "other">("all");
   const [isSending, setIsSending] = useState<boolean>(false);
 
+  const [filterGliderStyle, setFilterGliderStyle] = useState({ left: 0, width: 0 });
+  const filterRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
+
   const filterOptions = [
     { id: "all", label: "全部" },
     { id: "other", label: "仅看对方" },
     { id: "scored", label: "已评分" },
   ] as const;
 
-  const activeFilterIndex = filterOptions.findIndex((f) => f.id === filterRating);
+  useLayoutEffect(() => {
+    const el = filterRefs.current[filterRating];
+    if (el) {
+      setFilterGliderStyle({
+        left: el.offsetLeft,
+        width: el.offsetWidth,
+      });
+    }
+  }, [filterRating]);
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
@@ -143,10 +154,10 @@ export const ChatTimeline: React.FC = () => {
           <div className="hidden lg:flex relative items-center p-0.5 rounded-md bg-neutral-100 dark:bg-neutral-900 border border-black/[0.04] dark:border-white/[0.06] shrink-0">
             {/* Sliding Pill Indicator */}
             <div
-              className="absolute top-0.5 bottom-0.5 rounded bg-white dark:bg-neutral-800 shadow-2xs border border-black/[0.04] dark:border-white/[0.08] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none"
+              className="absolute top-0.5 bottom-0.5 rounded bg-white dark:bg-[#1c1d22] shadow-2xs border border-black/[0.06] dark:border-white/[0.1] transition-all duration-250 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none"
               style={{
-                left: `calc(${activeFilterIndex * 33.333}% + 2px)`,
-                width: `calc(33.333% - 4px)`
+                transform: `translateX(${filterGliderStyle.left}px)`,
+                width: `${filterGliderStyle.width}px`
               }}
             />
 
@@ -155,11 +166,12 @@ export const ChatTimeline: React.FC = () => {
               return (
                 <button
                   key={opt.id}
+                  ref={(el) => { filterRefs.current[opt.id] = el; }}
                   onClick={(e) => handleFilterChange(e, opt.id)}
-                  className={`relative z-10 px-2.5 py-0.5 rounded text-[11px] font-medium transition-colors duration-200 active:scale-95 ${
+                  className={`relative z-10 px-2.5 py-0.5 rounded text-[11px] font-medium transition-colors duration-150 active:scale-95 ${
                     isActive
-                      ? "text-neutral-900 dark:text-neutral-100 font-semibold"
-                      : "text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200"
+                      ? "text-neutral-900 dark:text-white"
+                      : "text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-300"
                   }`}
                 >
                   {opt.label}

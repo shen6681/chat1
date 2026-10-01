@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useLayoutEffect } from "react";
 import { useApp } from "../context/AppContext";
 import { 
   Search, 
@@ -31,13 +31,24 @@ export const Header: React.FC = () => {
   const [soundOn, setSoundOn] = useState<boolean>(sound.isEnabled());
   const [themeRotating, setThemeRotating] = useState<boolean>(false);
 
+  const [gliderStyle, setGliderStyle] = useState({ left: 0, width: 0 });
+  const tabRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
+
   const navTabs = [
     { id: "workspace", label: "工作台", icon: Layers },
     { id: "import", label: "导入中心", icon: FileUp },
     { id: "docs", label: "说明与原理", icon: BookOpen },
   ] as const;
 
-  const activeTabIndex = navTabs.findIndex((t) => t.id === activeTab);
+  useLayoutEffect(() => {
+    const el = tabRefs.current[activeTab];
+    if (el) {
+      setGliderStyle({
+        left: el.offsetLeft,
+        width: el.offsetWidth,
+      });
+    }
+  }, [activeTab]);
 
   const handleTabChange = (e: React.MouseEvent<HTMLButtonElement>, tab: "workspace" | "import" | "docs") => {
     triggerRipple(e);
@@ -95,10 +106,10 @@ export const Header: React.FC = () => {
       <nav className="relative flex items-center p-0.5 rounded-lg bg-neutral-100 dark:bg-neutral-900/80 border border-black/[0.04] dark:border-white/[0.06] shrink-0">
         {/* Dynamic Sliding Pill Indicator */}
         <div
-          className="absolute top-0.5 bottom-0.5 rounded-md bg-white dark:bg-neutral-800 shadow-xs border border-black/[0.04] dark:border-white/[0.08] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none"
+          className="absolute top-0.5 bottom-0.5 rounded-md bg-white dark:bg-[#1c1d22] shadow-xs border border-black/[0.06] dark:border-white/[0.1] transition-all duration-250 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none"
           style={{
-            left: `calc(${activeTabIndex * 33.333}% + 2px)`,
-            width: `calc(33.333% - 4px)`
+            transform: `translateX(${gliderStyle.left}px)`,
+            width: `${gliderStyle.width}px`
           }}
         />
 
@@ -108,15 +119,16 @@ export const Header: React.FC = () => {
           return (
             <button
               key={tab.id}
+              ref={(el) => { tabRefs.current[tab.id] = el; }}
               onClick={(e) => handleTabChange(e, tab.id)}
-              className={`relative z-10 flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors duration-200 ${
+              className={`relative z-10 flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors duration-150 active:scale-95 ${
                 isActive
-                  ? "text-neutral-900 dark:text-neutral-100 font-semibold"
-                  : "text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200"
+                  ? "text-neutral-900 dark:text-white"
+                  : "text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-300"
               }`}
               title={tab.label}
             >
-              <Icon className="w-3.5 h-3.5 stroke-[1.75]" />
+              <Icon className={`w-3.5 h-3.5 stroke-[1.75] ${isActive ? "text-indigo-600 dark:text-indigo-400" : ""}`} />
               <span className="hidden sm:inline">{tab.label}</span>
             </button>
           );
