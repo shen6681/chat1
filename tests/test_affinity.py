@@ -66,6 +66,7 @@ class AffinityTests(unittest.TestCase):
             calls.append(rows)
             if len(calls) == 2: raise ValueError('合成断网')
             return self.model(rows, settings)
+        self.run_analysis(entries, fail_second)
         with self.assertRaises(ValueError): self.run_analysis(entries, fail_second)
         self.assertEqual(55, self.affinity.view(self.profile)['score'])
         self.assertEqual(100, self.affinity.view(self.profile)['processed'])
@@ -94,9 +95,29 @@ class AffinityTests(unittest.TestCase):
     def test_score_never_leaves_bounds_and_negative_change_uses_headroom(self):
         entries = self.entries(300)
         def negative(rows, settings): return {**self.model(rows,settings),'rawDelta':-10,'confidence':1}
-        result = self.run_analysis(entries, negative)
+        for _ in range(3): result = self.run_analysis(entries, negative)
         self.assertEqual(25.6, result['score'])
         self.assertTrue(all(0 <= batch['after'] <= 100 for batch in result['batches']))
+
+    def test_each_manual_click_analyzes_only_the_next_100_messages(self):
+        entries = self.entries(250); calls = []; progress = []
+        def analyze(rows, settings):
+            calls.append([r['id'] for r in rows]); return self.model(rows, settings)
+        def click():
+            return run_affinity(self.archive, self.settings, self.profile, entries,
+                                threading.Event(), progress.append, analyze)
+        first = click()
+        self.assertEqual(100, first['processed'])
+        self.assertEqual(150, first['pending'])
+        self.assertEqual(1, len(calls))
+        self.assertEqual(100, progress[-1]['total'])
+        second = click()
+        self.assertEqual(200, second['processed'])
+        self.assertEqual(50, second['pending'])
+        self.assertEqual(2, len(calls))
+        self.assertTrue(set(calls[0]).isdisjoint(calls[1]))
+        click()
+        self.assertEqual(2, len(calls))
 
     def test_atomic_commit_rolls_back_message_marks_when_insert_fails(self):
         entries = self.entries(100)

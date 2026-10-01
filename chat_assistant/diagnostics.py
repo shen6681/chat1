@@ -10,7 +10,7 @@ from .storage import _crypt
 
 
 def run_self_test(path: Path) -> bool:
-    result = {"version": "2.8.0", "synthetic_only": True, "network_requests": 0}
+    result = {"version": "2.8.1", "synthetic_only": True, "network_requests": 0}
     try:
         from .ui_fonts import register_bundled_fonts, FontBook
         from .onboarding import GuideState

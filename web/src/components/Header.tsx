@@ -94,7 +94,7 @@ export const Header: React.FC = () => {
               聊有据
             </span>
             <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10 text-neutral-500 dark:text-neutral-400 border border-black/[0.04] dark:border-white/[0.06]">
-              v2.8
+              v2.8.1
             </span>
           </div>
         </div>

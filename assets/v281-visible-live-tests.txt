@@ -1,0 +1,6 @@
+test_screen_to_ocr_to_reply_and_dedupe (test_live_flow.LiveFlowTest.test_screen_to_ocr_to_reply_and_dedupe) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 7.239s
+
+OK

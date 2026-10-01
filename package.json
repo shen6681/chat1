@@ -1,6 +1,6 @@
 {
   "name": "chat1",
-  "version": "2.8.0",
+  "version": "2.8.1",
   "description": "聊有据 · 现代化高精科学沟通与回复辅助系统 (Linear / Raycast 级高精 UI)",
   "private": true,
   "scripts": {

@@ -28,6 +28,7 @@ export const Inspector: React.FC = () => {
   } = useApp();
 
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [evidencePage, setEvidencePage] = useState<'affinity' | 'dimensions'>('affinity');
   const [dimensionsExpanded, setDimensionsExpanded] = useState<boolean>(true);
   const [displayScore, setDisplayScore] = useState<number | null>(analysis?.overallScore ?? null);
 
@@ -99,7 +100,7 @@ export const Inspector: React.FC = () => {
   }
 
   return (
-    <aside className="w-full lg:w-96 xl:w-[420px] h-[calc(100dvh-7rem)] lg:h-[calc(100dvh-3.5rem)] flex flex-col border-l border-black/[0.06] dark:border-white/[0.07] bg-neutral-50/70 dark:bg-[#0c0c0e]/70 backdrop-blur-sm overflow-y-auto">
+    <aside className="w-full lg:w-96 xl:w-[420px] h-[calc(100dvh-7rem)] lg:h-[calc(100dvh-3.5rem)] flex flex-col border-l border-black/[0.06] dark:border-white/[0.07] bg-neutral-50/70 dark:bg-[#0c0c0e]/70 backdrop-blur-sm overflow-hidden">
       {/* Inspector Top Header */}
       <div className="p-4 border-b border-black/[0.05] dark:border-white/[0.06] flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -113,8 +114,81 @@ export const Inspector: React.FC = () => {
         </span>
       </div>
 
-      <div className="p-4 space-y-5">
-        <AffinityPanel />
+      <div role="tablist" aria-label="人物档案分析页" className="flex gap-1 px-4 py-3 border-b border-black/5 dark:border-white/10 shrink-0">
+        {([['affinity', '好感度'], ['dimensions', '六维互动']] as const).map(([page, label]) => <button key={page} role="tab" id={`inspector-${page}-tab`} aria-selected={evidencePage === page} aria-controls={`inspector-${page}-panel`} onClick={() => setEvidencePage(page)} className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors ${evidencePage === page ? 'bg-white dark:bg-neutral-800 text-indigo-600 dark:text-indigo-300 shadow-xs border border-indigo-500/20' : 'text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 border border-transparent'}`}>{label}</button>)}
+      </div>
+
+      <div className="p-4 space-y-5 flex-1 min-h-0 overflow-y-auto">
+        <div role="tabpanel" id="inspector-affinity-panel" aria-labelledby="inspector-affinity-tab" hidden={evidencePage !== 'affinity'}>
+          <AffinityPanel />
+        </div>
+        {/* SECTION 2: 六维互动积极度 (6D Relational Dynamics) */}
+        <div role="tabpanel" id="inspector-dimensions-panel" aria-labelledby="inspector-dimensions-tab" hidden={evidencePage !== 'dimensions'}>
+        <div
+          onMouseMove={handleMouseMove}
+          className="spotlight-card p-4 rounded-xl bg-white dark:bg-neutral-900/90 border border-black/[0.07] dark:border-white/[0.08] shadow-xs space-y-3"
+        >
+          <div
+            onClick={handleToggleDimensions}
+            className="flex items-center justify-between cursor-pointer select-none relative z-10"
+          >
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-xs text-neutral-900 dark:text-neutral-100">
+                  六维互动积极度
+                </span>
+                <span className="relative flex items-center">
+                  <span className="font-mono text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 shadow-[0_0_10px_rgba(16,185,129,0.18)] transition-all">
+                    {displayScore !== null ? `${displayScore} / 100` : "证据不足"}
+                  </span>
+                </span>
+              </div>
+              <p className="text-[10px] text-neutral-400">基于 FerryCorleone 人际动力学加权聚合</p>
+            </div>
+
+            <button className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 active:scale-90 transition-transform">
+              {dimensionsExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </button>
+          </div>
+
+          {dimensionsExpanded && (
+            <div className="space-y-3 pt-2 border-t border-black/[0.04] dark:border-white/[0.06] relative z-10">
+              {analysis.dimensions.map((dim) => (
+                <div key={dim.key} className="space-y-1">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="text-neutral-600 dark:text-neutral-300 font-medium">
+                      {dim.name}
+                      <span className="text-neutral-400 text-[10px] ml-1">({dim.weight}%)</span>
+                    </span>
+                    <span className="font-mono font-medium text-neutral-900 dark:text-neutral-100">
+                      {dim.score !== null ? `${dim.score}%` : "证据不足"}
+                    </span>
+                  </div>
+
+                  {/* Progress track */}
+                  <div className="w-full h-1.5 rounded-full bg-neutral-100 dark:bg-neutral-800 overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ${
+                        dim.score !== null && dim.score >= 70
+                          ? "bg-emerald-500"
+                          : dim.score !== null && dim.score <= 40
+                          ? "bg-amber-500"
+                          : "bg-indigo-500"
+                      }`}
+                      style={{ width: `${dim.score ?? 0}%` }}
+                    />
+                  </div>
+
+                  <p className="text-[10px] text-neutral-400 truncate" title={dim.evidence}>
+                    证据: {dim.evidence}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        </div>
+
         {/* Selected Message Deep-Dive Callout */}
         {selectedMessage && (selectedMessage.explanation || selectedMessage.rating) && (
           <div className="p-3.5 rounded-xl bg-indigo-500/5 dark:bg-indigo-500/10 border border-indigo-500/20 space-y-2 animate-fadeIn">
@@ -231,71 +305,6 @@ export const Inspector: React.FC = () => {
               );
             })}
           </div>
-        </div>
-
-        {/* SECTION 2: 六维互动积极度 (6D Relational Dynamics) */}
-        <div
-          onMouseMove={handleMouseMove}
-          className="spotlight-card p-4 rounded-xl bg-white dark:bg-neutral-900/90 border border-black/[0.07] dark:border-white/[0.08] shadow-xs space-y-3"
-        >
-          <div
-            onClick={handleToggleDimensions}
-            className="flex items-center justify-between cursor-pointer select-none relative z-10"
-          >
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-semibold text-xs text-neutral-900 dark:text-neutral-100">
-                  六维互动积极度
-                </span>
-                <span className="relative flex items-center">
-                  <span className="font-mono text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 shadow-[0_0_10px_rgba(16,185,129,0.18)] transition-all">
-                    {displayScore !== null ? `${displayScore} / 100` : "证据不足"}
-                  </span>
-                </span>
-              </div>
-              <p className="text-[10px] text-neutral-400">基于 FerryCorleone 人际动力学加权聚合</p>
-            </div>
-
-            <button className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 active:scale-90 transition-transform">
-              {dimensionsExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            </button>
-          </div>
-
-          {dimensionsExpanded && (
-            <div className="space-y-3 pt-2 border-t border-black/[0.04] dark:border-white/[0.06] relative z-10">
-              {analysis.dimensions.map((dim) => (
-                <div key={dim.key} className="space-y-1">
-                  <div className="flex items-center justify-between text-[11px]">
-                    <span className="text-neutral-600 dark:text-neutral-300 font-medium">
-                      {dim.name}
-                      <span className="text-neutral-400 text-[10px] ml-1">({dim.weight}%)</span>
-                    </span>
-                    <span className="font-mono font-medium text-neutral-900 dark:text-neutral-100">
-                      {dim.score !== null ? `${dim.score}%` : "证据不足"}
-                    </span>
-                  </div>
-
-                  {/* Progress track */}
-                  <div className="w-full h-1.5 rounded-full bg-neutral-100 dark:bg-neutral-800 overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all duration-500 ${
-                        dim.score !== null && dim.score >= 70
-                          ? "bg-emerald-500"
-                          : dim.score !== null && dim.score <= 40
-                          ? "bg-amber-500"
-                          : "bg-indigo-500"
-                      }`}
-                      style={{ width: `${dim.score ?? 0}%` }}
-                    />
-                  </div>
-
-                  <p className="text-[10px] text-neutral-400 truncate" title={dim.evidence}>
-                    证据: {dim.evidence}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
 
         {/* SECTION 3: 双方表达逻辑解构 (Cognitive Flow) */}

@@ -27,7 +27,7 @@ from .affinity import AffinityStore
 from .affinity_runner import run_affinity
 from .wechat_workflow import WechatWorkflow
 
-VERSION = '2.8.0'
+VERSION = '2.8.1'
 SETTING_FIELDS = {'mode':'mode', 'chatUrl':'chat_url', 'chatModel':'chat_model',
     'jevUrl':'jev_url', 'jevModel':'jev_model', 'rememberKeys':'remember_keys',
     'autoAnalyze':'auto_analyze', 'interval':'interval', 'cooldown':'cooldown',
@@ -213,6 +213,7 @@ class LocalService:
             identity = uuid.uuid4().hex
             task = {'id':identity,'profile':profile,'kind':kind,'state':'running','completed':0,
                 'total':len(entries),'error':'','notices':[],'cancel':threading.Event()}
+            if kind=='affinity': task['total']=100 if len(self.affinity.pending(profile,entries))>=100 else 0
             task.update(start=body.get('start',''),end=body.get('end',''))
             if len(self.tasks)>=30:
                 finished = next((k for k,t in self.tasks.items() if t['state']!='running'), None)

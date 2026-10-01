@@ -1,6 +1,6 @@
 """聊有据 · 科学沟通辅助系统主入口
 
-- 默认启动 WebView2 原生窗口中的 React 工作台
+- 默认在浏览器本机端口启动 React 工作台
 - 添加 --desktop / --legacy 参数可启动原 Tkinter 桌面程序
 """
 from __future__ import annotations
@@ -22,9 +22,10 @@ def main():
         parser = argparse.ArgumentParser(description='聊有据 · 本机工作台')
         parser.add_argument('--no-browser',action='store_true',help='仅启动本机服务')
         parser.add_argument('--browser',action='store_true',help='在浏览器中打开同一工作台')
+        parser.add_argument('--native',action='store_true',help='显式打开可选的 WebView2 窗口')
         parser.add_argument('--server-info',type=Path,help='写入本机服务地址与版本，不含令牌或私人数据')
         args = parser.parse_args()
-        if args.no_browser or args.browser:
+        if args.no_browser or args.browser or not args.native:
             from chat_assistant.web_server import launch_web
             launch_web(open_browser=not args.no_browser,ready_file=args.server_info)
         else:

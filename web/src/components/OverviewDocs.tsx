@@ -122,7 +122,7 @@ export const OverviewDocs: React.FC = () => {
                 DeepSeek (Chat Completions)
               </span>
               <p className="text-xs text-neutral-500 leading-relaxed">
-                按需解释单条或多选消息、生成回复建议。好感度独立从50起，主动选择后每100条分析变化及原文依据，批次和断点保存在本机。
+                按需解释单条或多选消息、生成回复建议。好感度独立从50起，每次主动点击只分析下一组100条的变化及原文依据，完成保存后停止，批次和断点保存在本机。
               </p>
             </div>
           </div>

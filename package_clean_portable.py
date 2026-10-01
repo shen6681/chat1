@@ -92,7 +92,7 @@ def main():
     shutil.copytree(ROOT/"dist"/"tools"/"licenses", OUTPUT/"tools"/"licenses")
     copy_file(ROOT/"HELPER_TOOLS.md", "tools/README.md")
 
-    guide = """聊有据 2.8.0 · Windows 便携版
+    guide = """聊有据 2.8.1 · Windows 便携版
 
 一、打开程序
 完整解压 ZIP 到普通可写文件夹，再双击“启动程序.cmd”或 ChatReplyAssistant.exe。
@@ -101,7 +101,7 @@ def main():
 请完整保留 tools 和 licenses 文件夹，不要直接在压缩软件预览窗口内启动。
 
 二、首次使用
-第一次打开在原生窗口显示新版工作台，跟着新手指南的“下一步”即可。
+第一次打开在浏览器本机端口显示新版工作台，跟着新手指南的“下一步”即可。
 可以随时跳过；完成或跳过后不再自动出现。“使用说明”或Ctrl+K → 重新查看新手指南，可以再看。
 引导期间不自动导出记录、不调用模型、不扣 API 额度；直接关软件则下次仍会引导。
 设置 → 模型、字体 / 主色 / 区块背景；点“保存设置”后生效并重启保留。
@@ -110,17 +110,17 @@ def main():
 1. 设置 → 选择模型、字体字号与使用偏好，接口子区域填写自己的 Key，点击保存设置。
    Jev / 组合模式由 Jev 批量评分；DeepSeek 仅在勾选单条或多选解释或生成回复时调用。
    启动、文件导入、查看历史和离线自检不需要 API Key；调用模型分析需要联网和对应API额度。
-2. 导入中心 → 导入文字文件 / SQLite。右上角屏幕 / 导出工具打开原生QQ与微信导出中心。
+2. 微信可在导入中心一键备份导入，必须自己选择两个目录。QQ导出工具也在导入中心，其他文字文件可直接选择导入。
    确认会话与哪位是我，再保存联系人档案。仅提取文字，跳过图片和表情包。
 3. 选择联系人，点击开始/结束日期在日历里选择，确定后点筛选，再开始评分。今日 / 近7天 / 全部时间直接筛选；重置恢复全部时间。
    每10条一组请求与保存，再显示各条评分；无法判断自动继续，仅提示页码。
    记录每页100条，评分会处理整个所选时间范围。暂时断连选择重连原任务。
 4. 分析未完成可暂停或退出，重启后选联系人，点“继续上次任务”。默认跳过已完成消息。
    仅主动勾选“重新评分已完成记录”才重做。尚未收到并保存成功响应的请求可能重试。
-5. 人物卡和攻略进度显示六维文字互动信号，不代表对方真实喜欢的概率。
+5. 人物卡六维互动指标与好感度分别计算，仅供理解文字线索，不表示对方真实喜欢的概率。
 6. 点击生成回复获取所选范围建议；右上角“屏幕读取”打开OCR窗口，QQ导出在导入中心，选择同一联系人再框选聊天区。
    校对发言人，开始实时读取；建议需由使用者复制、修改和发送。
-4. 好感度从50起，与六维互动评分独立；主动点击计算后每100条用DeepSeek分析并保存依据。
+7. 好感度从50起，每次点击“分析接下来的100条”只计算一组并保存，继续要再次点击；你自行决定分析几组。
 
 退出程序：Ctrl+K → 退出程序。只关闭浏览器不会停止本机服务。
 
@@ -151,7 +151,7 @@ VERSION.json：版本；文件清单.json：逐文件SHA256；THIRD_PARTY_NOTICE
 不要由此推定任意商业分发权，详见 tools/README.md。第三方账号均由使用者本人配置。
 """
     (OUTPUT/"使用说明.txt").write_text(guide, encoding="utf-8-sig")
-    (OUTPUT/"README.md").write_text("# 聊有据 2.8.0 便携版\n\n完整解压后双击 **启动程序.cmd**。无需安装 Python。\n\n"+guide, encoding="utf-8")
+    (OUTPUT/"README.md").write_text("# 聊有据 2.8.1 便携版\n\n完整解压后双击 **启动程序.cmd**。无需安装 Python。\n\n"+guide, encoding="utf-8")
     (OUTPUT/"启动程序.cmd").write_bytes(b'@echo off\r\nsetlocal\r\ncd /d "%~dp0"\r\nstart "" "%~dp0ChatReplyAssistant.exe" %*\r\n')
     (OUTPUT/"离线自检.cmd").write_bytes(b'@echo off\r\nsetlocal\r\ncd /d "%~dp0"\r\nset "CHAT1_CHECK=%TEMP%\\chat1-check-%RANDOM%-%RANDOM%.json"\r\nstart "" /wait "%~dp0ChatReplyAssistant.exe" --self-test "%CHAT1_CHECK%"\r\nif exist "%CHAT1_CHECK%" type "%CHAT1_CHECK%"\r\necho.\r\npause\r\n')
     version.update(distribution="clean-portable", contains_personal_data=False, python_install_required=False,
@@ -170,7 +170,7 @@ VERSION.json：版本；文件清单.json：逐文件SHA256；THIRD_PARTY_NOTICE
             raise ValueError("Unexpected user-state file in the clean package")
     entries=[{"file":p.relative_to(OUTPUT).as_posix(),"size":p.stat().st_size,"sha256":sha256(p)}
              for p in sorted(OUTPUT.rglob("*")) if p.is_file()]
-    file_manifest={"version":"2.8.0","file_count":len(entries)+1,"runtime_bytes":sum(e["size"] for e in entries),
+    file_manifest={"version":"2.8.1","file_count":len(entries)+1,"runtime_bytes":sum(e["size"] for e in entries),
                    "assembly":"allowlist plus verified pristine upstream archives","files":entries}
     (OUTPUT/"文件清单.json").write_text(json.dumps(file_manifest,ensure_ascii=False,indent=2),encoding="utf-8")
     with zipfile.ZipFile(ZIP,"w",zipfile.ZIP_DEFLATED,compresslevel=6) as archive:

@@ -62,7 +62,7 @@ if (tool_source / "QQChatExporter").exists():
     shutil.copy2(root / "HELPER_TOOLS.md", tool_dist / "README.md")
 source_output = dist_root / "source"
 source_output.mkdir(exist_ok=True)
-with zipfile.ZipFile(source_output / "ChatReplyAssistant-source-v2.8.0.zip", "w", zipfile.ZIP_DEFLATED) as archive:
+with zipfile.ZipFile(source_output / "ChatReplyAssistant-source-v2.8.1.zip", "w", zipfile.ZIP_DEFLATED) as archive:
     # Include the reviewed Git index, including React source, lockfiles and built assets.
     # Untracked tools, node_modules, private data and build workspaces stay excluded.
     tracked = subprocess.check_output(['git', 'ls-files', '-z'], cwd=root).decode('utf-8').split('\0')
@@ -74,6 +74,6 @@ with zipfile.ZipFile(source_output / "ChatReplyAssistant-source-v2.8.0.zip", "w"
 output = root / "ChatReplyAssistant-Windows.zip"
 with zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as archive:
     for file in sorted(dist_root.rglob("*")):
-        if file.is_file() and (not file.name.startswith('ChatReplyAssistant-source-v') or file.name=='ChatReplyAssistant-source-v2.8.0.zip'):
+        if file.is_file() and (not file.name.startswith('ChatReplyAssistant-source-v') or file.name=='ChatReplyAssistant-source-v2.8.1.zip'):
             archive.write(file, Path("ChatReplyAssistant") / file.relative_to(dist_root))
 print("Portable ZIP:", output)

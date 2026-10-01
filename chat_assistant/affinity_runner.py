@@ -57,7 +57,9 @@ def group_rows(rows,budget):
 
 def run_affinity(archive, settings, profile, entries, cancel, on_progress=None, analyze=None):
     store = AffinityStore(archive); settings = replace(settings,mode='DeepSeek',vision=False)
-    pending = store.pending(profile,entries); target = len(pending)//100*100
+    # One explicit user request covers one complete batch. Further batches
+    # require another click, even when the selected range contains more.
+    pending = store.pending(profile,entries); target = 100 if len(pending)>=100 else 0
     if not target: return store.view(profile,entries)
     settings.validate(); owner = 'affinity:'+uuid.uuid4().hex
     ttl = max(480,settings.timeout+120)
