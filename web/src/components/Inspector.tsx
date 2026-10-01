@@ -161,7 +161,7 @@ export const Inspector: React.FC = () => {
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => handleCopy(reply.text, idx)}
-                        className={`p-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1 ${
+                        className={`p-1.5 rounded-md text-xs font-medium active:scale-90 transition-all flex items-center gap-1 ${
                           isCopied
                             ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                             : "text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800"
@@ -174,7 +174,7 @@ export const Inspector: React.FC = () => {
 
                       <button
                         onClick={() => handleApplyToChat(reply.text)}
-                        className="p-1.5 rounded-md text-neutral-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors"
+                        className="p-1.5 rounded-md text-neutral-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 active:scale-90 transition-all"
                         title="作为我方回复发送"
                       >
                         <Send className="w-3.5 h-3.5" />

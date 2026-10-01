@@ -10,6 +10,7 @@ import { CommandPalette } from "./components/CommandPalette";
 import { SettingsModal } from "./components/SettingsModal";
 import { ToastContainer } from "./components/Toast";
 import { Users, MessageCircle, BrainCircuit } from "lucide-react";
+import { sound } from "./utils/sound";
 
 const AppContent: React.FC = () => {
   const { activeTab, mobileView, setMobileView } = useApp();
@@ -52,8 +53,11 @@ const AppContent: React.FC = () => {
       {activeTab === "workspace" && (
         <div className="md:hidden fixed bottom-0 left-0 right-0 h-14 bg-white/90 dark:bg-[#09090b]/90 backdrop-blur-md border-t border-black/[0.06] dark:border-white/[0.08] flex items-center justify-around z-30 px-2">
           <button
-            onClick={() => setMobileView("contacts")}
-            className={`flex flex-col items-center justify-center gap-1 flex-1 py-1 text-[11px] font-medium transition-colors ${
+            onClick={() => {
+              sound.playClick();
+              setMobileView("contacts");
+            }}
+            className={`flex flex-col items-center justify-center gap-1 flex-1 py-1 text-[11px] font-medium active:scale-90 transition-transform ${
               mobileView === "contacts"
                 ? "text-indigo-600 dark:text-indigo-400 font-semibold"
                 : "text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200"
@@ -64,8 +68,11 @@ const AppContent: React.FC = () => {
           </button>
 
           <button
-            onClick={() => setMobileView("chat")}
-            className={`flex flex-col items-center justify-center gap-1 flex-1 py-1 text-[11px] font-medium transition-colors ${
+            onClick={() => {
+              sound.playClick();
+              setMobileView("chat");
+            }}
+            className={`flex flex-col items-center justify-center gap-1 flex-1 py-1 text-[11px] font-medium active:scale-90 transition-transform ${
               mobileView === "chat"
                 ? "text-indigo-600 dark:text-indigo-400 font-semibold"
                 : "text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200"
@@ -76,8 +83,11 @@ const AppContent: React.FC = () => {
           </button>
 
           <button
-            onClick={() => setMobileView("inspector")}
-            className={`flex flex-col items-center justify-center gap-1 flex-1 py-1 text-[11px] font-medium transition-colors ${
+            onClick={() => {
+              sound.playClick();
+              setMobileView("inspector");
+            }}
+            className={`flex flex-col items-center justify-center gap-1 flex-1 py-1 text-[11px] font-medium active:scale-90 transition-transform ${
               mobileView === "inspector"
                 ? "text-indigo-600 dark:text-indigo-400 font-semibold"
                 : "text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200"

@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useApp } from "../context/AppContext";
 import { 
-  Sparkles, 
   Search, 
   Settings, 
   Sun, 
@@ -14,6 +13,7 @@ import {
   VolumeX
 } from "lucide-react";
 import { sound } from "../utils/sound";
+import { BrandLogo } from "./BrandLogo";
 
 export const Header: React.FC = () => {
   const { 
@@ -55,16 +55,15 @@ export const Header: React.FC = () => {
     <header className="sticky top-0 z-40 w-full h-14 px-4 lg:px-6 flex items-center justify-between border-b border-black/[0.06] dark:border-white/[0.07] bg-white/85 dark:bg-[#09090b]/85 backdrop-blur-md transition-colors duration-200">
       {/* Left: Brand & Local Status */}
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-indigo-500/10 dark:bg-indigo-500/20 border border-indigo-500/25 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-sm shrink-0 relative overflow-hidden group">
-            <Sparkles className="w-4 h-4 stroke-[1.75] transition-transform group-hover:scale-110" />
-            <div className="absolute inset-0 bg-radial from-indigo-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-          </div>
+        <div className="flex items-center gap-2.5">
+          {/* Animated Dynamic Brand Logo */}
+          <BrandLogo />
+          
           <div className="flex items-center gap-1.5 whitespace-nowrap">
-            <span className="font-semibold text-sm tracking-tight text-neutral-900 dark:text-neutral-100">
+            <span className="font-semibold text-sm tracking-tight text-neutral-900 dark:text-neutral-100 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
               聊有据
             </span>
-            <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10 text-neutral-500 dark:text-neutral-400">
+            <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10 text-neutral-500 dark:text-neutral-400 border border-black/[0.04] dark:border-white/[0.06]">
               v2.6
             </span>
           </div>

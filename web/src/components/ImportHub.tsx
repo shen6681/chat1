@@ -188,7 +188,7 @@ export const ImportHub: React.FC = () => {
               <div className="pt-2 flex items-center justify-center gap-3">
                 <button
                   onClick={handleLoadDemoFile}
-                  className="px-4 py-2 rounded-lg bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-medium text-xs hover:bg-neutral-800 dark:hover:bg-neutral-100 transition-all shadow-xs flex items-center gap-1.5"
+                  className="btn-sheen px-4 py-2 rounded-lg bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-medium text-xs hover:bg-neutral-800 dark:hover:bg-neutral-100 active:scale-95 transition-all shadow-[0_0_15px_rgba(99,102,241,0.2)] flex items-center gap-1.5"
                 >
                   <Sparkles className="w-3.5 h-3.5 text-indigo-400 dark:text-indigo-600" />
                   <span>载入示例微信聊天样本快速体验</span>
@@ -231,8 +231,11 @@ export const ImportHub: React.FC = () => {
                   {detectedSpeakers.map((spk) => (
                     <div
                       key={spk}
-                      onClick={() => setSelfChoice(spk)}
-                      className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${
+                      onClick={() => {
+                        sound.playClick();
+                        setSelfChoice(spk);
+                      }}
+                      className={`p-3.5 rounded-xl border cursor-pointer active:scale-[0.98] transition-all flex items-center justify-between ${
                         selfChoice === spk
                           ? "bg-indigo-50/60 dark:bg-indigo-950/40 border-indigo-500 shadow-xs"
                           : "bg-neutral-50 dark:bg-neutral-800/60 border-black/[0.06] dark:border-white/[0.08]"
@@ -256,15 +259,18 @@ export const ImportHub: React.FC = () => {
             {/* Navigation Actions */}
             <div className="flex items-center justify-between pt-4 border-t border-black/[0.05] dark:border-white/[0.06]">
               <button
-                onClick={() => setStep(1)}
-                className="px-4 py-2 rounded-lg text-xs font-medium text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100"
+                onClick={() => {
+                  sound.playClick();
+                  setStep(1);
+                }}
+                className="px-4 py-2 rounded-lg text-xs font-medium text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 active:scale-95 transition-all"
               >
                 返回上一步
               </button>
 
               <button
                 onClick={handleFinishImport}
-                className="px-5 py-2 rounded-lg bg-indigo-600 text-white font-medium text-xs hover:bg-indigo-700 transition-all shadow-xs flex items-center gap-1.5"
+                className="btn-sheen px-5 py-2 rounded-lg bg-indigo-600 text-white font-medium text-xs hover:bg-indigo-500 active:scale-95 transition-all shadow-[0_0_15px_rgba(99,102,241,0.3)] hover:shadow-[0_0_20px_rgba(99,102,241,0.5)] flex items-center gap-1.5"
               >
                 <span>保存并进入工作台</span>
                 <ArrowRight className="w-3.5 h-3.5" />

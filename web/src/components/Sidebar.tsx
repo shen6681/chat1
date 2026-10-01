@@ -58,7 +58,7 @@ export const Sidebar: React.FC = () => {
               sound.playClick();
               setImportModalOpen(true);
             }}
-            className="flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-all"
+            className="btn-sheen flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 active:scale-95 transition-all shadow-2xs"
             title="导入新聊天记录"
           >
             <Plus className="w-3 h-3 stroke-[2.5]" />
@@ -84,7 +84,7 @@ export const Sidebar: React.FC = () => {
             <button
               key={key}
               onClick={() => handleSelectFilter(key)}
-              className={`px-2 py-0.5 rounded text-[11px] font-medium transition-all ${
+              className={`px-2 py-0.5 rounded text-[11px] font-medium active:scale-95 transition-all ${
                 platformFilter === key
                   ? "bg-neutral-900 dark:bg-white text-white dark:text-neutral-900"
                   : "text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200"
@@ -109,7 +109,7 @@ export const Sidebar: React.FC = () => {
               <div
                 key={p.id}
                 onClick={() => handleSelectProfile(p.id)}
-                className={`group relative p-2.5 rounded-lg cursor-pointer transition-all border ${
+                className={`group relative p-2.5 rounded-lg cursor-pointer active:scale-[0.98] transition-all border ${
                   isActive
                     ? "bg-white dark:bg-neutral-900/95 border-black/[0.08] dark:border-white/[0.12] shadow-xs dark:shadow-[0_0_15px_rgba(99,102,241,0.06)]"
                     : "border-transparent hover:bg-neutral-200/50 dark:hover:bg-neutral-900/40 text-neutral-700 dark:text-neutral-300"

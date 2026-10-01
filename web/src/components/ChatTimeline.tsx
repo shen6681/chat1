@@ -127,7 +127,7 @@ export const ChatTimeline: React.FC = () => {
           <div className="hidden lg:flex items-center gap-1 p-0.5 rounded-md bg-neutral-100 dark:bg-neutral-900 border border-black/[0.04] dark:border-white/[0.06]">
             <button
               onClick={() => handleFilterChange("all")}
-              className={`px-2 py-0.5 rounded text-[11px] font-medium transition-all ${
+              className={`px-2 py-0.5 rounded text-[11px] font-medium active:scale-95 transition-all ${
                 filterRating === "all"
                   ? "bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 shadow-xs"
                   : "text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200"
@@ -137,7 +137,7 @@ export const ChatTimeline: React.FC = () => {
             </button>
             <button
               onClick={() => handleFilterChange("other")}
-              className={`px-2 py-0.5 rounded text-[11px] font-medium transition-all ${
+              className={`px-2 py-0.5 rounded text-[11px] font-medium active:scale-95 transition-all ${
                 filterRating === "other"
                   ? "bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 shadow-xs"
                   : "text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200"
@@ -147,7 +147,7 @@ export const ChatTimeline: React.FC = () => {
             </button>
             <button
               onClick={() => handleFilterChange("scored")}
-              className={`px-2 py-0.5 rounded text-[11px] font-medium transition-all ${
+              className={`px-2 py-0.5 rounded text-[11px] font-medium active:scale-95 transition-all ${
                 filterRating === "scored"
                   ? "bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 shadow-xs"
                   : "text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200"
@@ -161,7 +161,7 @@ export const ChatTimeline: React.FC = () => {
           <button
             onClick={handleBatchAnalyzeWithSound}
             disabled={isAnalyzing}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 hover:bg-neutral-800 dark:hover:bg-neutral-100 transition-all shadow-xs disabled:opacity-50"
+            className="btn-sheen flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 hover:bg-neutral-800 dark:hover:bg-neutral-100 active:scale-95 transition-all shadow-xs disabled:opacity-50"
           >
             {isAnalyzing ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -174,7 +174,7 @@ export const ChatTimeline: React.FC = () => {
           {/* Export Report */}
           <button
             onClick={handleExportMarkdown}
-            className="p-1.5 rounded-md text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+            className="p-1.5 rounded-md text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 active:scale-90 transition-all"
             title="导出 Markdown 报告"
           >
             <Download className="w-4 h-4 stroke-[1.75]" />
@@ -291,7 +291,7 @@ export const ChatTimeline: React.FC = () => {
               sound.playClick();
               setInputSpeaker((prev) => (prev === "对方" ? "我" : "对方"));
             }}
-            className={`px-2.5 py-1.5 rounded-lg text-xs font-medium border flex items-center gap-1.5 shrink-0 transition-all ${
+            className={`px-2.5 py-1.5 rounded-lg text-xs font-medium border flex items-center gap-1.5 shrink-0 active:scale-95 transition-all ${
               inputSpeaker === "对方"
                 ? "bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30"
                 : "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/30"
@@ -321,11 +321,11 @@ export const ChatTimeline: React.FC = () => {
             />
           </div>
 
-          {/* Send / Ingest Button with ambient button sheen */}
+          {/* Send / Ingest Button with ambient button sheen & active scale */}
           <button
             type="submit"
             disabled={!inputVal.trim()}
-            className="px-3.5 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-500 transition-all disabled:opacity-40 disabled:cursor-not-allowed shrink-0 flex items-center gap-1 text-xs font-medium shadow-[0_0_15px_rgba(99,102,241,0.3)] hover:shadow-[0_0_20px_rgba(99,102,241,0.5)]"
+            className="btn-sheen px-3.5 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-500 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed shrink-0 flex items-center gap-1 text-xs font-medium shadow-[0_0_15px_rgba(99,102,241,0.3)] hover:shadow-[0_0_20px_rgba(99,102,241,0.5)]"
           >
             <Send className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">录入语境</span>
