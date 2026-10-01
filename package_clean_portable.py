@@ -92,7 +92,7 @@ def main():
     shutil.copytree(ROOT/"dist"/"tools"/"licenses", OUTPUT/"tools"/"licenses")
     copy_file(ROOT/"HELPER_TOOLS.md", "tools/README.md")
 
-    guide = """聊有据 2.6 · Windows 便携版
+    guide = """聊有据 2.6.1 · Windows 便携版
 
 一、打开程序
 完整解压 ZIP 到普通可写文件夹，再双击“启动程序.cmd”或 ChatReplyAssistant.exe。
@@ -147,7 +147,7 @@ VERSION.json：版本；文件清单.json：逐文件SHA256；THIRD_PARTY_NOTICE
 不要由此推定任意商业分发权，详见 tools/README.md。第三方账号均由使用者本人配置。
 """
     (OUTPUT/"使用说明.txt").write_text(guide, encoding="utf-8-sig")
-    (OUTPUT/"README.md").write_text("# 聊有据 2.6 便携版\n\n完整解压后双击 **启动程序.cmd**。无需安装 Python。\n\n"+guide, encoding="utf-8")
+    (OUTPUT/"README.md").write_text("# 聊有据 2.6.1 便携版\n\n完整解压后双击 **启动程序.cmd**。无需安装 Python。\n\n"+guide, encoding="utf-8")
     (OUTPUT/"启动程序.cmd").write_bytes(b'@echo off\r\nsetlocal\r\ncd /d "%~dp0"\r\nstart "" "%~dp0ChatReplyAssistant.exe" %*\r\n')
     (OUTPUT/"离线自检.cmd").write_bytes(b'@echo off\r\nsetlocal\r\ncd /d "%~dp0"\r\nset "CHAT1_CHECK=%TEMP%\\chat1-check-%RANDOM%-%RANDOM%.json"\r\nstart "" /wait "%~dp0ChatReplyAssistant.exe" --self-test "%CHAT1_CHECK%"\r\nif exist "%CHAT1_CHECK%" type "%CHAT1_CHECK%"\r\necho.\r\npause\r\n')
     version.update(distribution="clean-portable", contains_personal_data=False, python_install_required=False,
@@ -166,7 +166,7 @@ VERSION.json：版本；文件清单.json：逐文件SHA256；THIRD_PARTY_NOTICE
             raise ValueError("Unexpected user-state file in the clean package")
     entries=[{"file":p.relative_to(OUTPUT).as_posix(),"size":p.stat().st_size,"sha256":sha256(p)}
              for p in sorted(OUTPUT.rglob("*")) if p.is_file()]
-    file_manifest={"version":"2.6.0","file_count":len(entries)+1,"runtime_bytes":sum(e["size"] for e in entries),
+    file_manifest={"version":"2.6.1","file_count":len(entries)+1,"runtime_bytes":sum(e["size"] for e in entries),
                    "assembly":"allowlist plus verified pristine upstream archives","files":entries}
     (OUTPUT/"文件清单.json").write_text(json.dumps(file_manifest,ensure_ascii=False,indent=2),encoding="utf-8")
     with zipfile.ZipFile(ZIP,"w",zipfile.ZIP_DEFLATED,compresslevel=6) as archive:

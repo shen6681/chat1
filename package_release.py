@@ -59,7 +59,7 @@ if (tool_source / "QQChatExporter").exists():
     shutil.copy2(root / "HELPER_TOOLS.md", tool_dist / "README.md")
 source_output = dist_root / "source"
 source_output.mkdir(exist_ok=True)
-with zipfile.ZipFile(source_output / "ChatReplyAssistant-source-v2.6.zip", "w", zipfile.ZIP_DEFLATED) as archive:
+with zipfile.ZipFile(source_output / "ChatReplyAssistant-source-v2.6.1.zip", "w", zipfile.ZIP_DEFLATED) as archive:
     files = [root / name for name in ("main.py", "requirements.txt", "README.md", "LICENSE", "THIRD_PARTY_NOTICES.md", "HELPER_TOOLS.md", "setup.ps1", "build.ps1", "package_release.py", "deploy_chat1.py", "package_clean_portable.py", "verify_clean_portable.py", "fetch_fonts.py", "preview_v26.py", "preview_motion.py", "probe_transitions.py", "ChatReplyAssistant.spec", "启动程序.cmd")]
     for directory in ("chat_assistant", "tests"):
         files.extend((root / directory).glob("*.py"))
@@ -71,6 +71,6 @@ with zipfile.ZipFile(source_output / "ChatReplyAssistant-source-v2.6.zip", "w", 
 output = root / "ChatReplyAssistant-Windows.zip"
 with zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as archive:
     for file in sorted(dist_root.rglob("*")):
-        if file.is_file() and (not file.name.startswith('ChatReplyAssistant-source-v') or file.name=='ChatReplyAssistant-source-v2.6.zip'):
+        if file.is_file() and (not file.name.startswith('ChatReplyAssistant-source-v') or file.name=='ChatReplyAssistant-source-v2.6.1.zip'):
             archive.write(file, Path("ChatReplyAssistant") / file.relative_to(dist_root))
 print("Portable ZIP:", output)

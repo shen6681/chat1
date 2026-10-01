@@ -140,6 +140,43 @@ class BatchTests(unittest.TestCase):
         self.assertEqual((result['state'],result['completed']),('paused',3))
         self.assertEqual(sum(e.done for e in self.store.run_entries(result['run_id'])),3)
 
+    def test_later_long_subrequest_failure_preserves_received_scores_for_resume(self):
+        self.profile=self.store.create('合成长文本断网','微信','long-failure','self')
+        self.store.import_messages(self.profile.id,[Message('对方',str(i)+('字'*9000),message_id=str(i)) for i in range(10)])
+        self.fault='network'
+        observed=[]
+        def progress(kind,data):
+            if kind=='batch':
+                observed.append(ArchiveStore(self.path).run_info(data['run_id'])['completed'])
+        with self.assertRaisesRegex(APIError,'网络故障'):
+            self.run_job(on_progress=progress)
+        reopened=ArchiveStore(self.path)
+        previous=reopened.last_run(self.profile.id)
+        self.assertEqual(previous['state'],'error')
+        self.assertEqual(previous['completed'],3)
+        self.assertEqual(sum(e.done for e in reopened.run_entries(previous['id'])),3)
+        self.assertEqual(observed,[3])
+        self.fault=None;self.calls.clear()
+        result=self.run_job(run_id=previous['id'])
+        targets=[t['entry_id'] for _,body in self.calls for t in body['state']['targets']]
+        self.assertEqual(targets,[e.id for e in reopened.entries(self.profile.id)[3:]])
+        self.assertEqual((result['state'],result['completed']),('completed',10))
+
+    def test_cancel_with_subrequest_error_preserves_received_scores(self):
+        self.profile=self.store.create('合成长文本暂停','微信','long-cancel','self')
+        self.store.import_messages(self.profile.id,[Message('对方',str(i)+('字'*9000),message_id=str(i)) for i in range(10)])
+        cancel=threading.Event()
+        original=self.post
+        def post(url,key,body,timeout):
+            if len(self.calls)==1:
+                cancel.set()
+                raise APIError('模拟暂停时网络故障')
+            return original(url,key,body,timeout)
+        with patch('chat_assistant.batch_analysis.post_json',side_effect=post):
+            result=run_history(self.store,self.settings,self.profile.id,self.store.entries(self.profile.id),cancel=cancel)
+        self.assertEqual((result['state'],result['completed']),('paused',3))
+        self.assertEqual(self.store.run_info(result['run_id'])['completed'],3)
+
     def test_real_process_crash_after_committed_ten_resumes_at_eleventh(self):
         code='''import os,sys
 from pathlib import Path

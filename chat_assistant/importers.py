@@ -107,9 +107,9 @@ def _text(value: Any) -> str:
     return "" if MEDIA_PLACEHOLDER.fullmatch(text) else text
 
 
-def _finish(conversations, source, warnings=None):
+def _finish(conversations, source, warnings=None, allow_empty=False):
     result = [c for c in conversations if c.messages]
-    if not result:
+    if not result and not allow_empty:
         raise ValueError("没有找到可导入的文本消息。请选择文本聊天导出文件。")
     total = sum(len(c.messages) for c in result)
     if total > MAX_MESSAGES:
@@ -125,7 +125,7 @@ def _finish(conversations, source, warnings=None):
     return ImportBundle(result, source, warnings or [])
 
 
-def from_json(data: Any, source: str = "JSON") -> ImportBundle:
+def from_json(data: Any, source: str = "JSON", *, _allow_empty: bool = False) -> ImportBundle:
     if isinstance(data, list) and any(isinstance(row, dict) and row.get("_type") == "header" for row in data):
         blocks, current = [], None
         for row in data:
@@ -136,18 +136,23 @@ def from_json(data: Any, source: str = "JSON") -> ImportBundle:
                 current = {**row, "members": [], "messages": []}; blocks.append(current)
             elif current is not None and kind in {"member", "message"}:
                 current["members" if kind == "member" else "messages"].append(row)
-        bundles = [from_json(block, source) for block in blocks if block["messages"]]
-        return _finish([c for b in bundles for c in b.conversations], source, [w for b in bundles for w in b.warnings])
+        bundles = [from_json(block, source, _allow_empty=True) for block in blocks]
+        return _finish([c for b in bundles for c in b.conversations], source, [w for b in bundles for w in b.warnings], _allow_empty)
     if isinstance(data, list) and data and all(isinstance(x, dict) and "messages" in x for x in data):
-        bundles = [from_json(x, source) for x in data]
-        return _finish([c for b in bundles for c in b.conversations], source)
+        bundles = [from_json(x, source, _allow_empty=True) for x in data]
+        return _finish([c for b in bundles for c in b.conversations], source, [w for b in bundles for w in b.warnings], _allow_empty)
     if isinstance(data, dict) and isinstance(data.get("sessions"), list):
-        bundles = [from_json(x, source) for x in data["sessions"] if isinstance(x, dict) and "messages" in x]
-        return _finish([c for b in bundles for c in b.conversations], source)
+        if any(not isinstance(x, dict) or "messages" not in x for x in data["sessions"]):
+            raise ValueError("会话结构无效，每个会话需要 messages 数组；请重新导出 JSON。")
+        bundles = [from_json(x, source, _allow_empty=True) for x in data["sessions"]]
+        return _finish([c for b in bundles for c in b.conversations], source, [w for b in bundles for w in b.warnings], _allow_empty)
     root = data if isinstance(data, dict) else {}
     messages = root.get("messages", data if isinstance(data, list) else None)
     if not isinstance(messages, list):
         raise ValueError("JSON 中未找到 messages 数组；支持 ChatLab、WeFlow、QQChatExporter。")
+    if _allow_empty and any(not isinstance(row, dict) or not any(key in row for key in
+            ("content", "text", "message", "parsedContent", "type", "localType", "recalled", "system")) for row in messages):
+        raise ValueError("会话中存在结构无效的消息；请重新导出，不会将其当作图片或空记录跳过。")
     meta = root.get("meta") or root.get("chatInfo") or root.get("session") or {}
     if not isinstance(meta, dict):
         meta = {"name": str(meta)}
@@ -214,7 +219,7 @@ def from_json(data: Any, source: str = "JSON") -> ImportBundle:
         if identifier == "0":
             identifier = ""
         conversations[row_key].messages.append(ImportedMessage(sender, text, stamp(row.get("timestamp", row.get("createTime", row.get("formattedTime", "")))), identifier, self_flag, display))
-    return _finish(conversations.values(), source, [f"已跳过 {skipped} 条非文本或空消息。"] if skipped else [])
+    return _finish(conversations.values(), source, [f"已跳过 {skipped} 条非文本或空消息。"] if skipped else [], _allow_empty)
 
 
 def from_text(text: str, source: str = "粘贴文本") -> ImportBundle:
