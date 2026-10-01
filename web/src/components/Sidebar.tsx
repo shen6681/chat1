@@ -16,7 +16,7 @@ export const Sidebar: React.FC = () => {
     profiles, 
     activeProfile, 
     setActiveProfileId, 
-    setImportModalOpen,
+    setActiveTab,
     setMobileView
   } = useApp();
 
@@ -73,7 +73,7 @@ export const Sidebar: React.FC = () => {
             onClick={(e) => {
               triggerRipple(e);
               sound.playClick();
-              setImportModalOpen(true);
+              setActiveTab("import");
             }}
             className="btn-sheen flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 active:scale-95 transition-all shadow-2xs"
             title="导入新聊天记录"
