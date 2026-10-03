@@ -303,17 +303,11 @@ export const ChatTimeline: React.FC = () => {
                     </>
                   )}
 
-                  {/* Emotion and Intent Pills */}
-                  {m.emotion && m.emotion[0] && (
-                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400">
-                      {m.emotion[0].label} ({Math.round(m.emotion[0].probability * 100)}%)
-                    </span>
-                  )}
-
-                  {m.intent && m.intent[0] && (
-                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400">
-                      {m.intent[0].label}
-                    </span>
+                  {m.rating?.reason && (
+                    <details className="basis-full max-w-prose text-[11px] text-neutral-500">
+                      <summary className="cursor-pointer">互动变化判断依据</summary>
+                      <p className="mt-1 whitespace-pre-wrap leading-relaxed">{m.rating.reason}</p>
+                    </details>
                   )}
 
                   {/* Explanation CTA */}

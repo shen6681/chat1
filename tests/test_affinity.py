@@ -45,6 +45,53 @@ class AffinityTests(unittest.TestCase):
         self.assertEqual(50, result['score'])
         self.assertEqual(99, result['pending'])
 
+    def test_perspectives_have_independent_scores_checkpoints_and_original_speakers(self):
+        entries = self.entries(100)
+        self.run_analysis(entries)
+        own_store = AffinityStore(self.archive, 'self')
+        self.assertEqual(100, own_store.view(self.profile)['pending'])
+        def own_model(rows, settings):
+            own = next(r for r in rows if r['speaker'] == '我')
+            return {**self.model(rows, settings), 'rawDelta': -4,
+                    'evidence': [{'entryId': own['id'], 'quote': own['text'], 'signal': '我表达退让。'}]}
+        result = run_affinity(self.archive, self.settings, self.profile, entries,
+                              threading.Event(), analyze=own_model, perspective='self')
+        self.assertEqual(48, result['score'])
+        self.assertEqual('self', result['perspective'])
+        self.assertEqual('我', result['batches'][0]['evidence'][0]['speaker'])
+        self.assertEqual(55, self.affinity.view(self.profile)['score'])
+        reopened = AffinityStore(ArchiveStore(Path(self.temp.name)), 'self')
+        self.assertEqual(100, reopened.view(self.profile)['processed'])
+        self.assertEqual(0, reopened.view(self.profile)['pending'])
+
+    def test_self_direction_requires_self_evidence(self):
+        result = run_affinity(self.archive, self.settings, self.profile, self.entries(100),
+                              threading.Event(), analyze=self.model, perspective='self')
+        self.assertEqual(50, result['score'])
+
+    def test_insights_persist_and_must_reference_checked_evidence(self):
+        entries = self.entries(100)
+        raw = self.model([{'id':e.id, 'speaker':e.message.speaker, 'text':e.message.text} for e in entries], self.settings)
+        insight = {'text': '可能更习惯直接表达，仅限本段聊天。', 'evidenceIds': [raw['evidence'][0]['entryId']]}
+        raw.update(personality=[insight], pursuitAdvice=[insight])
+        result = self.run_analysis(entries, lambda rows, settings: raw)
+        self.assertEqual([insight], result['batches'][0]['personality'])
+        self.assertEqual([insight], result['batches'][0]['pursuitAdvice'])
+        for ids in ([], [999999], [entries[0].id], [True]):
+            with self.subTest(ids=ids), self.assertRaises(ValueError):
+                validate_result({**raw, 'personality': [{**insight, 'evidenceIds': ids}]}, entries)
+
+    def test_invalid_perspective_is_rejected(self):
+        with self.assertRaises(ValueError): AffinityStore(self.archive, 'invalid')
+
+    def test_provider_receives_explicit_direction_and_keeps_emoji(self):
+        from chat_assistant.affinity_runner import analyze_affinity
+        with patch('chat_assistant.affinity_runner.post_json', return_value={'choices':[{'message':{'content':'{}'}}]}) as request:
+            analyze_affinity([{'id':1, 'speaker':'我', 'text':'😭😠'}], self.settings, 'self')
+        payload = request.call_args.args[2]
+        self.assertIn('评分主体是“我”', payload['messages'][0]['content'])
+        self.assertIn('😭😠', payload['messages'][1]['content'])
+
     def test_100_messages_apply_confidence_and_persist_without_rerunning(self):
         calls = []
         def analyze(rows, settings):

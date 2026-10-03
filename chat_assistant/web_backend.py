@@ -45,6 +45,7 @@ class LocalService:
         self.config_stamp = self._settings_stamp()
         self.store = ArchiveStore(self.directory)
         self.affinity = AffinityStore(self.store)
+        self.self_affinity = AffinityStore(self.store, 'self')
         self.lock = threading.RLock()
         self.previews, self.tasks, self.native = {}, {}, None
         self.wechat = WechatWorkflow(self)
@@ -137,7 +138,8 @@ class LocalService:
         offset = max(0,int(query.get('offset',0))); limit = min(200,max(1,int(query.get('limit',100))))
         return {'profileId':profile, 'messages':[self.message_view(e) for e in entries[offset:offset+limit]],
             'total':len(entries), 'offset':offset, 'limit':limit, 'analysis':self.summary(entries),
-            'lastRun':self.store.last_run(profile), 'affinity':self.affinity.view(profile,entries)}
+            'lastRun':self.store.last_run(profile), 'affinity':self.affinity.view(profile,entries),
+            'selfAffinity':self.self_affinity.view(profile,entries)}
 
     def preview_import(self, body):
         name = str(body.get('name','')).replace('\\','/').rsplit('/',1)[-1]
@@ -195,6 +197,9 @@ class LocalService:
     def wait_task(self, identity, timeout=180): self.tasks[identity]['thread'].join(timeout)
 
     def start_task(self, kind, body):
+        perspective = body.get('perspective', 'other')
+        if kind == 'affinity' and perspective not in ('other', 'self'):
+            raise ValueError('分析视角无效。')
         if kind=='affinity' and body.get('calculate') is not True:
             raise ValueError('好感度不会自动计算，请主动选择计算后再开始。')
         profile = str(body.get('profile','')); self.store.profile(profile)
@@ -213,7 +218,9 @@ class LocalService:
             identity = uuid.uuid4().hex
             task = {'id':identity,'profile':profile,'kind':kind,'state':'running','completed':0,
                 'total':len(entries),'error':'','notices':[],'cancel':threading.Event()}
-            if kind=='affinity': task['total']=100 if len(self.affinity.pending(profile,entries))>=100 else 0
+            if kind=='affinity':
+                affinity_store = self.self_affinity if perspective == 'self' else self.affinity
+                task.update(total=100 if len(affinity_store.pending(profile,entries))>=100 else 0, perspective=perspective)
             task.update(start=body.get('start',''),end=body.get('end',''))
             if len(self.tasks)>=30:
                 finished = next((k for k,t in self.tasks.items() if t['state']!='running'), None)
@@ -263,7 +270,7 @@ class LocalService:
                     elif kind=='affinity':
                         def affinity_progress(data):
                             with self.lock: task.update(data)
-                        result = run_affinity(self.store,settings,profile,entries,task['cancel'],affinity_progress)
+                        result = run_affinity(self.store,settings,profile,entries,task['cancel'],affinity_progress,perspective=perspective)
                         with self.lock: task.update(state='paused' if task['cancel'].is_set() else 'completed',affinity=result)
                     else: raise ValueError('任务类型无效。')
                 except Exception as error:

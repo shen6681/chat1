@@ -12,15 +12,18 @@ export interface Job {
   error?: string; run_id?: string; notices: { page: number; entryId: number; reason: string }[];
   analysis?: AnalysisSummary;
   start?: string; end?: string;
+  perspective?: 'other' | 'self';
 }
 interface Page {
   affinity?: AffinityState;
+  selfAffinity?: AffinityState;
   viewScope?: string;
   profileId: string; messages: MessageItem[]; total: number; analysis: AnalysisSummary;
   lastRun?: { id: string; state: string; completed: number; total: number; start_text: string; end_text: string };
 }
 interface AppContextType {
   affinity: AffinityState | undefined; calculateAffinity: () => Promise<void>;
+  affinityPerspective: 'other' | 'self'; setAffinityPerspective: (value: 'other' | 'self') => void;
   theme: 'dark' | 'light'; toggleTheme: () => void;
   activeTab: Tab; setActiveTab: (tab: Tab) => void;
   mobileView: 'contacts' | 'chat' | 'inspector'; setMobileView: (view: 'contacts' | 'chat' | 'inspector') => void;
@@ -57,6 +60,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [profiles, setProfiles] = useState<ContactProfile[]>([]);
   const [activeProfileId, setProfileId] = useState('');
   const [pageData, setPageData] = useState<Page | null>(null);
+  const [affinityPerspective, setAffinityPerspective] = useState<'other' | 'self'>('other');
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [startDate, setStart] = useState(''); const [endDate, setEnd] = useState('');
   const [page, setPage] = useState(0); const [revision, setRevision] = useState(0);
@@ -192,7 +196,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const data = pageData?.profileId === activeProfileId && pageData.viewScope === [activeProfileId, startDate, endDate, page].join('|') ? pageData : null;
   const messages = data?.messages || [];
   return <AppContext.Provider value={{
-    affinity: data?.affinity, calculateAffinity: () => runTask('affinity', { calculate: true }),
+    affinity: affinityPerspective === 'self' ? data?.selfAffinity : data?.affinity,
+    affinityPerspective, setAffinityPerspective,
+    calculateAffinity: () => runTask('affinity', { calculate: true, perspective: affinityPerspective }),
     theme, toggleTheme: () => { void updateSettings({ theme: theme === 'dark' ? 'light' : 'dark' }); },
     activeTab, setActiveTab, mobileView, setMobileView, profiles,
     activeProfile: profiles.find((p) => p.id === activeProfileId), setActiveProfileId,

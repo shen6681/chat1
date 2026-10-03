@@ -64,6 +64,30 @@ class WebBackendTests(unittest.TestCase):
         self.assertEqual(1, len(self.service.store.profiles()))
         self.assertEqual(2, self.service.store.profile(identity).count)
 
+    def test_affinity_job_routes_and_persists_selected_perspective(self):
+        from chat_assistant.core import Message
+        identity = self.imported()
+        self.service.store.import_messages(identity, [Message('我' if i % 2 == 0 else '对方', f'合成消息{i}', message_id=f'extra-{i}') for i in range(100)])
+        self.service.settings = Settings(chat_key='synthetic')
+        def model(rows, settings, perspective='other'):
+            subject = '我' if perspective == 'self' else '对方'
+            quote = next(row for row in rows if row['speaker'] == subject)
+            return {'rawDelta': 4, 'confidence': 1, 'summary': '合成结果',
+                    'evidence': [{'entryId': quote['id'], 'quote': quote['text'], 'signal': '可核对的表达'}]}
+        with patch('chat_assistant.affinity_runner.analyze_affinity', side_effect=model):
+            job = self.request('/api/jobs/affinity', {'profile': identity, 'calculate': True, 'perspective': 'self'})
+            self.service.wait_task(job['id'])
+        final = self.request('/api/jobs/' + job['id'])
+        self.assertEqual('completed', final['state'])
+        self.assertEqual('self', final['perspective'])
+        page = self.request('/api/messages?profile=' + identity)
+        self.assertEqual(54, page['selfAffinity']['score'])
+        self.assertEqual(100, page['selfAffinity']['processed'])
+        self.assertEqual(50, page['affinity']['score'])
+        self.assertEqual(0, page['affinity']['processed'])
+        with self.assertRaises(HTTPError):
+            self.request('/api/jobs/affinity', {'profile': identity, 'calculate': True, 'perspective': 'invalid'})
+
     def test_identity_preview_uses_member_names_without_changing_identity_keys(self):
         data = {'chatlab': {'version': '0.0.2'}, 'meta': {'platform': 'weixin', 'ownerId': 'self'},
                 'members': [{'platformId': 'self', 'accountName': '我'}, {'platformId': 'peer', 'accountName': '小星'}],
