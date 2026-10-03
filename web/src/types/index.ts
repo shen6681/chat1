@@ -68,6 +68,13 @@ export interface AnalysisSummary {
 }
 
 export interface AffinityState {
+  totalMessages: number; globalPending: number; comprehensiveReady: boolean;
+  comprehensive: {
+    summary: string; observations: { text: string; evidenceIds: number[] }[];
+    pursuitAdvice: { text: string; evidenceIds: number[] }[];
+    evidence: { entryId: number; quote: string; signal: string; speaker: string }[];
+    uncertainties: string[]; messageCount: number; batchCount: number; model: string; createdAt: string;
+  } | null;
   perspective: 'other' | 'self';
   score: number; initial: number; processed: number; pending: number; availableBatches: number;
   batches: { id: string; before: number; delta: number; after: number; confidence: number;

@@ -110,11 +110,22 @@ class WebBackendTests(unittest.TestCase):
         self.assertEqual(50,page['affinity']['score'])
         self.assertIsNone(page['analysis']['overallScore'])
         self.service.settings = Settings(chat_key='synthetic-only')
-        job=self.request('/api/jobs/affinity',{'profile':identity,'calculate':True})
-        self.service.wait_task(job['id'])
+        with patch('chat_assistant.affinity_runner.analyze_affinity', return_value={'rawDelta':0,'confidence':0,'summary':'证据不足','evidence':[]}):
+            job=self.request('/api/jobs/affinity',{'profile':identity,'calculate':True})
+            self.service.wait_task(job['id'])
         result=self.request('/api/jobs/'+job['id'])
         self.assertEqual('completed',result['state'])
         self.assertEqual(50,result['affinity']['score'])
+
+    def test_comprehensive_endpoint_cannot_bypass_whole_profile_gate(self):
+        identity = self.imported()
+        with patch('chat_assistant.web_backend.run_comprehensive') as run:
+            with self.assertRaises(HTTPError):
+                self.request('/api/jobs/comprehensive', {'profile':identity, 'calculate':True, 'start':'2026-10-01'})
+            run.assert_not_called()
+        page = self.request('/api/messages?profile=' + identity + '&start=2026-10-01')
+        self.assertFalse(page['affinity']['comprehensiveReady'])
+        self.assertEqual(2, page['affinity']['globalPending'])
 
     def test_guide_only_save_does_not_reencrypt_api_configuration(self):
         self.service.settings=Settings(chat_key='synthetic-only')

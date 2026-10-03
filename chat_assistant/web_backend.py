@@ -25,6 +25,7 @@ from .importers import MAX_FILE, load_file, load_sqlite, sqlite_tables
 from .storage import SettingsStore
 from .affinity import AffinityStore
 from .affinity_runner import run_affinity
+from .comprehensive import run_comprehensive
 from .wechat_workflow import WechatWorkflow
 
 VERSION = '2.8.1'
@@ -198,11 +199,15 @@ class LocalService:
 
     def start_task(self, kind, body):
         perspective = body.get('perspective', 'other')
-        if kind == 'affinity' and perspective not in ('other', 'self'):
+        if kind in ('affinity', 'comprehensive') and perspective not in ('other', 'self'):
             raise ValueError('分析视角无效。')
-        if kind=='affinity' and body.get('calculate') is not True:
+        if kind in ('affinity', 'comprehensive') and body.get('calculate') is not True:
             raise ValueError('好感度不会自动计算，请主动选择计算后再开始。')
         profile = str(body.get('profile','')); self.store.profile(profile)
+        if kind == 'comprehensive':
+            affinity_store = self.self_affinity if perspective == 'self' else self.affinity
+            if not affinity_store.view(profile)['comprehensiveReady']:
+                raise ValueError('全部聊天记录分析完成后才能开放综合分析。')
         with self.lock:
             self._refresh_settings()
             if any(t['state']=='running' and t['profile']==profile for t in self.tasks.values()):
@@ -212,6 +217,7 @@ class LocalService:
              else replace(settings,mode='DeepSeek') if kind!='score' else settings).validate()
             start,end = time_bounds(body.get('start',''),body.get('end',''))
             entries = self.store.run_entries(body['runId']) if kind=='score' and body.get('runId') else self.store.entries(profile,start,end)
+            if kind == 'comprehensive': entries = self.store.entries(profile)
             if body.get('runId') and self.store.run_info(body['runId'])['profile_id']!=profile:
                 raise ValueError('续做任务不属于当前联系人。')
             if not entries: raise ValueError('当前范围没有文字消息。')
@@ -220,7 +226,8 @@ class LocalService:
                 'total':len(entries),'error':'','notices':[],'cancel':threading.Event()}
             if kind=='affinity':
                 affinity_store = self.self_affinity if perspective == 'self' else self.affinity
-                task.update(total=100 if len(affinity_store.pending(profile,entries))>=100 else 0, perspective=perspective)
+                task.update(total=min(100,len(affinity_store.pending(profile,entries))), perspective=perspective)
+            if kind == 'comprehensive': task['perspective'] = perspective
             task.update(start=body.get('start',''),end=body.get('end',''))
             if len(self.tasks)>=30:
                 finished = next((k for k,t in self.tasks.items() if t['state']!='running'), None)
@@ -267,6 +274,11 @@ class LocalService:
                         summary.update(summary=result.summary,selfLogic=result.self_logic,otherLogic=result.other_logic,
                             replies=result.replies,cautions=result.cautions,shouldWait=result.should_wait,model=result.source)
                         with self.lock: task.update(state='completed',analysis=summary)
+                    elif kind=='comprehensive':
+                        def comprehensive_progress(data):
+                            with self.lock: task.update(data)
+                        result = run_comprehensive(self.store,settings,profile,task['cancel'],comprehensive_progress,perspective=perspective)
+                        with self.lock: task.update(state='paused' if result is None else 'completed', comprehensive=result)
                     elif kind=='affinity':
                         def affinity_progress(data):
                             with self.lock: task.update(data)
@@ -301,7 +313,7 @@ class LocalService:
         if route=='/api/settings': return self.save_settings(body)
         if route=='/api/import/preview': return self.preview_import(body)
         if route=='/api/import/commit': return self.commit_import(body)
-        if route.startswith('/api/jobs/') and route.rsplit('/',1)[-1] in ('score','explain','reply','affinity'):
+        if route.startswith('/api/jobs/') and route.rsplit('/',1)[-1] in ('score','explain','reply','affinity','comprehensive'):
             return self.start_task(route.rsplit('/',1)[-1],body)
         if route=='/api/jobs/pause':
             with self.lock:

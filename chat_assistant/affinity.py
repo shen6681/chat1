@@ -90,9 +90,26 @@ class AffinityStore:
             count = db.execute(f'SELECT COUNT(*) FROM {self.prefix}_targets t JOIN {self.prefix}_batches b ON t.batch_id=b.id WHERE b.profile_id=?',(profile,)).fetchone()[0]
         batches = [{'id':r['id'],'before':r['before_score'],'delta':r['delta'],'after':r['after_score'],
                     'createdAt':r['created_at'],'model':r['model'],**json.loads(r['result_json'])} for r in rows]
-        pending = len(self.pending(profile, self.archive.entries(profile) if entries is None else entries))
+        all_entries = self.archive.entries(profile)
+        pending = len(self.pending(profile, all_entries if entries is None else entries))
+        global_pending = len(self.pending(profile, all_entries))
+        snapshot = self.snapshot(all_entries, batches)
+        unlocked = bool(all_entries) and global_pending == 0
+        comprehensive = self.stage('comprehensive:' + snapshot) if unlocked else None
+        # Batch personality fields are retained on disk for backwards compatibility,
+        # but only a separately generated, whole-history report is exposed as insights.
+        for batch in batches:
+            batch.pop('personality', None)
+            batch.pop('pursuitAdvice', None)
         return {'score':rows[-1]['after_score'] if rows else 50,'initial':50,'processed':count,
-                'pending':pending,'availableBatches':pending//100,'batches':batches,'perspective':self.perspective}
+                'pending':pending,'availableBatches':(pending+99)//100,'batches':batches,'perspective':self.perspective,
+                'totalMessages':len(all_entries), 'globalPending':global_pending,
+                'comprehensiveReady':unlocked, 'comprehensive':comprehensive, 'snapshot':snapshot}
+
+    @staticmethod
+    def snapshot(entries, batches):
+        content = [[e.id, e.message.speaker, e.message.text, e.message.timestamp] for e in entries]
+        return hashlib.sha256(json.dumps([content, [b['id'] for b in batches]], ensure_ascii=False).encode()).hexdigest()
 
     def stage(self, key):
         with self.archive.connection() as db:
@@ -104,7 +121,8 @@ class AffinityStore:
             db.execute(f'INSERT OR IGNORE INTO {self.prefix}_stages VALUES(?,?,?)',(key,profile,json.dumps(result,ensure_ascii=False,allow_nan=False)))
 
     def commit(self, profile, entries, result, model):
-        if len(entries)!=100 or len({e.id for e in entries})!=100: raise ValueError('好感度每批必须为100条不同消息。')
+        if not 1 <= len(entries) <= 100 or len({e.id for e in entries}) != len(entries):
+            raise ValueError('好感度每批必须为1到100条不同消息。')
         result = validate_result(result, entries, self.perspective)
         batch_id = hashlib.sha256(json.dumps([profile,[e.id for e in entries]]).encode()).hexdigest()
         with self.archive.connection() as db:
@@ -115,7 +133,7 @@ class AffinityStore:
                 if db.execute(f'SELECT 1 FROM {self.prefix}_targets WHERE message_seq=?',(e.id,)).fetchone(): raise ValueError('好感度消息已计入，请重新载入。')
             row = db.execute(f'SELECT after_score FROM {self.prefix}_batches WHERE profile_id=? ORDER BY rowid DESC LIMIT 1',(profile,)).fetchone()
             before = row[0] if row else 50
-            raw = result['rawDelta'] * result['confidence'] if result['sufficient'] else 0
+            raw = result['rawDelta'] * result['confidence'] * len(entries)/100 if result['sufficient'] else 0
             delta = round(raw * min(1,(100-before)/50 if raw>=0 else before/50),1)
             after = round(max(0,min(100,before+delta)),1)
             db.execute(f'INSERT INTO {self.prefix}_batches VALUES(?,?,?,?,?,?,?,?)',(

@@ -38,12 +38,16 @@ class AffinityTests(unittest.TestCase):
         return run_affinity(self.archive, self.settings, self.profile, entries,
                             threading.Event(), analyze=model or self.model)
 
-    def test_99_messages_do_not_call_model_or_change_initial_50(self):
+    def test_99_messages_can_finish_and_unlock_comprehensive(self):
         calls = []
-        result = self.run_analysis(self.entries(99), lambda rows, settings: calls.append(rows))
-        self.assertEqual([], calls)
-        self.assertEqual(50, result['score'])
-        self.assertEqual(99, result['pending'])
+        def model(rows, settings):
+            calls.append(rows)
+            return self.model(rows, settings)
+        result = self.run_analysis(self.entries(99), model)
+        self.assertEqual(1, len(calls))
+        self.assertEqual(99, result['processed'])
+        self.assertEqual(0, result['pending'])
+        self.assertTrue(result['comprehensiveReady'])
 
     def test_perspectives_have_independent_scores_checkpoints_and_original_speakers(self):
         entries = self.entries(100)
@@ -75,8 +79,11 @@ class AffinityTests(unittest.TestCase):
         insight = {'text': '可能更习惯直接表达，仅限本段聊天。', 'evidenceIds': [raw['evidence'][0]['entryId']]}
         raw.update(personality=[insight], pursuitAdvice=[insight])
         result = self.run_analysis(entries, lambda rows, settings: raw)
-        self.assertEqual([insight], result['batches'][0]['personality'])
-        self.assertEqual([insight], result['batches'][0]['pursuitAdvice'])
+        self.assertNotIn('personality', result['batches'][0])
+        self.assertNotIn('pursuitAdvice', result['batches'][0])
+        with self.archive.connection() as db:
+            saved = json.loads(db.execute('SELECT result_json FROM affinity_batches').fetchone()[0])
+        self.assertEqual([insight], saved['personality'])
         for ids in ([], [999999], [entries[0].id], [True]):
             with self.subTest(ids=ids), self.assertRaises(ValueError):
                 validate_result({**raw, 'personality': [{**insight, 'evidenceIds': ids}]}, entries)
@@ -163,8 +170,12 @@ class AffinityTests(unittest.TestCase):
         self.assertEqual(50, second['pending'])
         self.assertEqual(2, len(calls))
         self.assertTrue(set(calls[0]).isdisjoint(calls[1]))
+        third = click()
+        self.assertEqual(3, len(calls))
+        self.assertEqual(250, third['processed'])
+        self.assertTrue(third['comprehensiveReady'])
         click()
-        self.assertEqual(2, len(calls))
+        self.assertEqual(3, len(calls))
 
     def test_atomic_commit_rolls_back_message_marks_when_insert_fails(self):
         entries = self.entries(100)

@@ -23,6 +23,7 @@ interface Page {
 }
 interface AppContextType {
   affinity: AffinityState | undefined; calculateAffinity: () => Promise<void>;
+  generateComprehensive: () => Promise<void>;
   affinityPerspective: 'other' | 'self'; setAffinityPerspective: (value: 'other' | 'self') => void;
   theme: 'dark' | 'light'; toggleTheme: () => void;
   activeTab: Tab; setActiveTab: (tab: Tab) => void;
@@ -199,6 +200,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     affinity: affinityPerspective === 'self' ? data?.selfAffinity : data?.affinity,
     affinityPerspective, setAffinityPerspective,
     calculateAffinity: () => runTask('affinity', { calculate: true, perspective: affinityPerspective }),
+    generateComprehensive: () => runTask('comprehensive', { calculate: true, perspective: affinityPerspective }),
     theme, toggleTheme: () => { void updateSettings({ theme: theme === 'dark' ? 'light' : 'dark' }); },
     activeTab, setActiveTab, mobileView, setMobileView, profiles,
     activeProfile: profiles.find((p) => p.id === activeProfileId), setActiveProfileId,

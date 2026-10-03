@@ -6,7 +6,8 @@ import tempfile
 import threading
 from pathlib import Path
 
-from chat_assistant.core import Message
+from chat_assistant.core import Message, Settings
+from chat_assistant.comprehensive import run_comprehensive
 from chat_assistant.web_backend import LocalService
 from chat_assistant.web_server import make_server
 
@@ -26,6 +27,15 @@ def main():
                   'uncertainties': ['仅为合成界面演示，未调用模型。']}
         service.affinity.commit(profile, entries, result, '合成演示')
         service.self_affinity.commit(profile, entries, {**result, 'rawDelta': 2}, '合成演示')
+        for perspective in ('other', 'self'):
+            run_comprehensive(service.store, Settings(chat_key='synthetic', chat_model='合成演示'),
+                              profile, threading.Event(), perspective=perspective,
+                              analyze=lambda rows, settings: {**result, 'summary':'综合分析（合成演示）：结合全部聊天，双方能够协商具体安排，并直接表达休息需求。推进关系时应同时观察行动与边界。'})
+        locked = service.store.create('待完成分析（合成演示）', '微信', 'locked-preview', 'self').id
+        service.store.import_messages(locked, [Message('我' if i % 2 == 0 else '对方', texts[i % 4], message_id=str(i)) for i in range(101)])
+        pending_entries = service.store.entries(locked)
+        service.affinity.commit(locked, pending_entries[:100], {
+            'rawDelta':0, 'confidence':0, 'summary':'已完成前100条，仍有1条待分析。', 'evidence':[]}, '合成演示')
         server = make_server(Path(__file__).resolve().parents[1] / 'web' / 'dist', service)
         print(f'http://127.0.0.1:{server.server_port}', flush=True)
         threading.Timer(600, server.shutdown).start()
