@@ -1,0 +1,23 @@
+{
+  "name": "WeChatEXP",
+  "repository": "https://github.com/sunhanaix/pc_wechat_exp",
+  "tag": "v2.10.20260928",
+  "commit": "a7ffd5471b410597b994f883689b1c60654982f0",
+  "source_dir": "tools/source/pc_wechat_exp-v2.10.20260928",
+  "archive_format": "ZIP of canonical tagged Git blobs with pinned Gitlink contents where applicable; generated locally, not a GitHub release asset",
+  "license": "No declared license",
+  "files": [
+    {
+      "file": "pc_wechat_exp-source-v2.10.20260928.zip",
+      "sha256": "6d59f311cf44aa44fa7fec79e20b955c63cdae5f796a3a2a31818a0301eec741",
+      "size": 5619240,
+      "modified": false
+    },
+    {
+      "file": "README-upstream.md",
+      "sha256": "208989372a8e0edce6e594e1ae0e8fadc5a488724916fc0d645b889255549480",
+      "size": 57186,
+      "modified": false
+    }
+  ]
+}

@@ -23,6 +23,15 @@ installed dependency distributions. This document is an index, not a replacement
 for their complete license texts. Additional transitive components have their
 own notices in that folder.
 
+The source checkout also retains pinned, unmodified reference source snapshots
+for WeChatEXP, QQNT_Export, QQChatExporter and NapCat under `tools/source`, with
+matching source ZIPs at the paths listed in `tools/README.md`. Exact tagged Git
+commits, per-file Git blob IDs / SHA256 hashes and archive hashes are recorded in
+`tools/source/provenance.json`. These are locally generated source archives, not
+release executables. Original notices and licenses are retained with each source
+tree and in the documented tool notice folders. Restoring these sources does not
+restore the separate helper executables or connector runtime directories.
+
 Feature reference: https://github.com/FerryCorleone/crush-monitor (MIT).
 No source files from that project are bundled in this independent implementation.
 

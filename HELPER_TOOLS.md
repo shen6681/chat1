@@ -1,5 +1,7 @@
 # QQ / 微信导出工具与连接器
 
+**源码仓库说明：** 固定版本的 WeChatEXP、QQNT_Export、QQChatExporter、NapCat 源码及原始许可现已保存在 `tools/source` 和对应源码 ZIP 中，详见 `tools/README.md`。以下运行文件路径描述完整便携版；本次源码补齐不包含独立发行版 EXE、QQ 连接器运行目录或构建产物。源码完整性可用 `python verify_reference_sources.py` 离线核验。
+
 主程序“QQ 导出中心”提供在线读取和已解密数据库导出。进入本程序的好友选择、读取、JSON 导出和存档流程；登录连接器本身不会导出记录。
 
 ## QQNT_Export：数据库导出器

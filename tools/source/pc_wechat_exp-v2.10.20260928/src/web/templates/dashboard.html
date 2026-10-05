@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}WeChat EXP — 仪表盘{% endblock %}
+{% block content %}
+<div class="dashboard-section">
+  <h2>数据采集</h2>
+  <p class="section-subtitle">一键备份微信聊天数据</p>
+  <div class="dashboard-grid">
+    <a href="/backup" class="dashboard-card">
+      <div class="card-icon">📦</div>
+      <div class="card-title">一键备份</div>
+      <div class="card-desc">扫描 → 解密 → 迁移媒体 → 构建索引，完整备份微信数据</div>
+    </a>
+  </div>
+</div>
+
+<div class="dashboard-section">
+  <h2>浏览与分析</h2>
+  <p class="section-subtitle">查看聊天记录、年度报告与词云</p>
+  <div class="dashboard-grid">
+    <a href="/chat" class="dashboard-card">
+      <div class="card-icon">💬</div>
+      <div class="card-title">聊天查看器</div>
+      <div class="card-desc">浏览所有聊天记录，支持搜索、筛选、图片/视频/语音播放</div>
+    </a>
+    <a href="/wrapped" class="dashboard-card">
+      <div class="card-icon">📊</div>
+      <div class="card-title">年度报告</div>
+      <div class="card-desc">Spotify Wrapped 风格年度数据总结，8 张精彩卡片</div>
+    </a>
+    <a href="/wordcloud" class="dashboard-card">
+      <div class="card-icon">☁️</div>
+      <div class="card-title">词云分析</div>
+      <div class="card-desc">智能中文分词 + 词频统计，生成交互式词云图</div>
+    </a>
+    <a href="/contacts" class="dashboard-card">
+      <div class="card-icon">📋</div>
+      <div class="card-title">通讯录</div>
+      <div class="card-desc">浏览完整微信通讯录，按姓名/备注搜索，查看联系人详情</div>
+    </a>
+    <a href="/search" class="dashboard-card">
+      <div class="card-icon">🔍</div>
+      <div class="card-title">全局搜索</div>
+      <div class="card-desc">跨全部聊天记录关键词搜索，按日期/类型/发送者/会话/标签组合筛选，支持正则</div>
+    </a>
+  </div>
+</div>
+
+<div class="dashboard-section">
+  <h2>导出</h2>
+  <p class="section-subtitle">聊天记录、报告与员工报表导出</p>
+  <div class="dashboard-grid">
+    <a href="/export" class="dashboard-card">
+      <div class="card-icon">📤</div>
+      <div class="card-title">聊天导出</div>
+      <div class="card-desc">按联系人、时间范围导出为 TXT / HTML / ChatLab JSONL（支持断点续传）</div>
+    </a>
+    <a href="/voice-export" class="dashboard-card">
+      <div class="card-icon">🔊</div>
+      <div class="card-title">语音导出</div>
+      <div class="card-desc">按人批量导出语音留言：独立 HTML + 音频文件（MP3/WAV），可合并成一条留档</div>
+    </a>
+    <a href="/pull" class="dashboard-card">
+      <div class="card-icon">🌐</div>
+      <div class="card-title">Pull 数据源</div>
+      <div class="card-desc">开启 ChatLab 远程数据源，让 ChatLab 直接拉取聊天记录，无需导出文件</div>
+    </a>
+    <a href="/employee" class="dashboard-card">
+      <div class="card-icon">👤</div>
+      <div class="card-title">员工报表</div>
+      <div class="card-desc">上传员工 Excel，批量匹配微信联系人并导出聊天</div>
+    </a>
+    <a href="/report" class="dashboard-card">
+      <div class="card-icon">📄</div>
+      <div class="card-title">综合报告</div>
+      <div class="card-desc">生成 HTML 综合数据报告：概览卡片 + 饼图 + 趋势 + 热力图</div>
+    </a>
+  </div>
+</div>
+
+<div class="dashboard-section">
+  <h2>工具</h2>
+  <p class="section-subtitle">垃圾清理、密钥提取与数据库解密</p>
+  <div class="dashboard-grid">
+    <a href="/cleanup" class="dashboard-card">
+      <div class="card-icon">🗑️</div>
+      <div class="card-title">垃圾清理</div>
+      <div class="card-desc">按聊天/空间占用批量删除源微信数据，释放磁盘空间</div>
+    </a>
+    <a href="/keyscan" class="dashboard-card">
+      <div class="card-icon">🔑</div>
+      <div class="card-title">提取密钥</div>
+      <div class="card-desc">从微信进程内存中提取数据库解密密钥</div>
+    </a>
+    <a href="/keys" class="dashboard-card">
+      <div class="card-icon">⌨️</div>
+      <div class="card-title">手动输入密钥</div>
+      <div class="card-desc">已有密钥？直接粘贴，自动校验并与多个数据库配对，之后即可解密/备份/导出</div>
+    </a>
+    <a href="/decrypt" class="dashboard-card">
+      <div class="card-icon">🔓</div>
+      <div class="card-title">解密数据库</div>
+      <div class="card-desc">使用已有密钥批量解密微信聊天数据库</div>
+    </a>
+    <a href="/settings" class="dashboard-card">
+      <div class="card-icon">⚙️</div>
+      <div class="card-title">设置</div>
+      <div class="card-desc">语音转文字引擎：本地 Whisper 模型 / 百度语音识别（自备 Key）</div>
+    </a>
+  </div>
+</div>
+{% endblock %}

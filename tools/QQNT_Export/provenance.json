@@ -1,0 +1,29 @@
+{
+  "name": "QQNT_Export",
+  "repository": "https://github.com/Tealina28/QQNT_Export",
+  "tag": "v3.3.0",
+  "commit": "35bf59ca9be456e756967b788839d4836b94cc3b",
+  "source_dir": "tools/source/QQNT_Export-v3.3.0",
+  "archive_format": "ZIP of canonical tagged Git blobs with pinned Gitlink contents where applicable; generated locally, not a GitHub release asset",
+  "license": "GPL-3.0",
+  "files": [
+    {
+      "file": "QQNT_Export-source-v3.3.0.zip",
+      "sha256": "3c6e90009aee4f00d761e1b80467863de2f304756eeaaa51542f603c9aaba1a7",
+      "size": 80040,
+      "modified": false
+    },
+    {
+      "file": "README-upstream.md",
+      "sha256": "bdec0db18191e5a5fd573f58a8ac51af73acb3002dd92bd3de9dd89de6b0f058",
+      "size": 7275,
+      "modified": false
+    },
+    {
+      "file": "LICENSE",
+      "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+      "size": 35149,
+      "modified": false
+    }
+  ]
+}

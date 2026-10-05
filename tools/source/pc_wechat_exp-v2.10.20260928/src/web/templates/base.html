@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}WeChat EXP{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+{% block head %}{% endblock %}
+</head>
+<body>
+<nav id="top-nav">
+  <a href="/" class="nav-brand">WeChat EXP</a>
+  <span class="nav-version" title="版本号">v{{ app_version }}</span>
+  <div class="nav-right">
+    <a href="/manual" class="nav-manual" title="使用手册">📖 使用手册</a>
+    {% block nav_right %}{% endblock %}
+  </div>
+</nav>
+<main id="content">
+{% block content %}{% endblock %}
+</main>
+{% block scripts %}{% endblock %}
+</body>
+</html>
