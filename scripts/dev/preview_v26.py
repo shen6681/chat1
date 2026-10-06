@@ -1,8 +1,10 @@
 """Capture the application's own windows with temporary synthetic data only."""
 import tempfile
+import sys
 import time
 import tkinter as tk
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from chat_assistant.app import AssistantApp
 from chat_assistant.capture import enable_dpi_awareness,grab
 from chat_assistant.core import Region,Message
@@ -17,7 +19,7 @@ with tempfile.TemporaryDirectory() as folder:
     def capture(name,widget=root):
         end=time.monotonic()+.3
         while time.monotonic()<end:root.update();time.sleep(.01)
-        grab(Region(widget.winfo_rootx(),widget.winfo_rooty(),widget.winfo_width(),widget.winfo_height())).save(Path('assets')/name)
+        grab(Region(widget.winfo_rootx(),widget.winfo_rooty(),widget.winfo_width(),widget.winfo_height())).save(Path(__file__).resolve().parents[2]/'docs'/'images'/name)
     app.set_status('界面演示 · 合成消息 · 不调用 API')
     capture('v26-empty.png')
     p=app.archives.create('林夏 · 演示','微信','demo','self')

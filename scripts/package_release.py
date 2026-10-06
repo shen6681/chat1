@@ -9,9 +9,10 @@ import json
 import subprocess
 
 
-root = Path(__file__).resolve().parent
+root = Path(__file__).resolve().parents[1]
 dist_root = root / "dist"
 shutil.copytree(root / 'assets' / 'fonts', dist_root / 'fonts', dirs_exist_ok=True)
+shutil.copytree(root / 'docs' / 'images', dist_root / 'docs' / 'images', dirs_exist_ok=True)
 for name in ("README.md", "THIRD_PARTY_NOTICES.md", "LICENSE"):
     shutil.copy2(root / name, dist_root / name)
 licenses = dist_root / "licenses"

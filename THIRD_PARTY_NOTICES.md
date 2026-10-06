@@ -23,14 +23,9 @@ installed dependency distributions. This document is an index, not a replacement
 for their complete license texts. Additional transitive components have their
 own notices in that folder.
 
-The source checkout also retains pinned, unmodified reference source snapshots
-for WeChatEXP, QQNT_Export, QQChatExporter and NapCat under `tools/source`, with
-matching source ZIPs at the paths listed in `tools/README.md`. Exact tagged Git
-commits, per-file Git blob IDs / SHA256 hashes and archive hashes are recorded in
-`tools/source/provenance.json`. These are locally generated source archives, not
-release executables. Original notices and licenses are retained with each source
-tree and in the documented tool notice folders. Restoring these sources does not
-restore the separate helper executables or connector runtime directories.
+The source checkout does not track WeChatEXP, QQNT_Export, QQChatExporter or
+NapCat files. Optional helpers are installed locally under the Git-ignored
+`tools/` directory; see `third_party/README.md` for expected paths and hashes.
 
 Feature reference: https://github.com/FerryCorleone/crush-monitor (MIT).
 No source files from that project are bundled in this independent implementation.
@@ -38,21 +33,20 @@ No source files from that project are bundled in this independent implementation
 QQ database exporter: QQNT_Export v3.3.0 (upstream prerelease, GPL-3.0), downloaded
 unchanged from https://github.com/Tealina28/QQNT_Export/releases/tag/v3.3.0.
 It is invoked as an independent process to export already decrypted QQNT database
-copies. The unmodified executable, complete license, matching source ZIP and
-download/hash manifest are included under `tools/QQNT_Export`. No implementation
-code is incorporated into the assistant. Copyright notices remain in the source
-and upstream files. The assistant's license does not replace the GPL license.
+copies. Its executable, license and matching source are available from upstream.
+No implementation code is incorporated into the assistant. The assistant's
+license does not replace the GPL license.
 
 Retained optional QQ connector bundle: QQChatExporter v6.3.0 (GPL-3.0), downloaded unchanged
 from https://github.com/shuakami/qq-chat-exporter/releases/tag/v6.3.0. It runs as a
 separate process only when the user clicks the QQ connector button. Exporting
 through the new assistant UI uses an independently implemented OneBot HTTP client.
-Matching source,
-license and provenance are included under `tools` in the portable release.
+Its source and license are available from upstream. It is not included in the
+source checkout.
 
 The upstream helper includes NapCat v4.18.19, copyright 2024 Mlikiowa, under its
 Limited Redistribution License (non-commercial use, license and attribution must
-be retained). Its exact license and matching source are included under `tools`.
+be retained). Consult its exact upstream license before distribution.
 https://github.com/NapNeko/NapCatQQ/blob/v4.18.19/LICENSE
 Do not describe this entire helper bundle as unrestricted open-source software.
 Other helper dependencies retain their original upstream notices in its folder.
@@ -65,8 +59,7 @@ by an independent reader; no ChatLab application code is bundled.
 
 User-selected WeChat exporter: sunhanaix/pc_wechat_exp (WeChat EXP)
 v2.10.20260928, downloaded unchanged from its official GitHub release for this
-user's local personal use. The executable, matching source archive, upstream
-README and download/hash manifest are in `tools/WeChatEXP`. This version has no
+user's local personal use. It is not in the source checkout. This version has no
 declared license; do not infer unrestricted redistribution or commercial rights.
 No implementation source is incorporated into the assistant. The assistant's MIT
 license does not grant rights over this independent helper.

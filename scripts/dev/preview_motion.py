@@ -1,9 +1,11 @@
 """Record a synthetic page transition and inspect brightness / stable geometry."""
 import json
+import sys
 import tempfile
 import time
 import tkinter as tk
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 import numpy as np
 from chat_assistant.app import AssistantApp
 from chat_assistant.capture import enable_dpi_awareness,grab
@@ -42,8 +44,10 @@ with tempfile.TemporaryDirectory() as folder:
         sample['stale_content_fraction']=round(float(np.mean(np.max(np.abs(np.asarray(frame).astype(int)[body]-reference[body]),axis=2)>12)),4)
         assert sample['stale_content_fraction']<.01,sample
     durations=[400]+[max(16,round(samples[i+1]['ms']-samples[i]['ms'])) for i in range(1,len(samples)-1)]+[800]
-    frames[0].save('assets/v26-switch.gif',save_all=True,append_images=frames[1:],duration=durations,loop=0)
-    frames[4].save('assets/v26-switch-frame.png')
-    Path('assets/transitions-visual.json').write_text(json.dumps(samples,indent=2),encoding='utf-8')
+    output = Path(__file__).resolve().parents[2] / 'docs' / 'images'
+    frames[0].save(output/'v26-switch.gif',save_all=True,append_images=frames[1:],duration=durations,loop=0)
+    frames[4].save(output/'v26-switch-frame.png')
+    (Path(__file__).resolve().parents[2] / 'verification-temp').mkdir(exist_ok=True)
+    (Path(__file__).resolve().parents[2] / 'verification-temp' / 'transitions-visual.json').write_text(json.dumps(samples,indent=2),encoding='utf-8')
     print(json.dumps({'frames':len(frames),'coordinates_stable':True,'black_frames_detected':0,'largest_dark_fraction':max(s['dark_fraction'] for s in samples),'largest_stale_content_fraction':max(s.get('stale_content_fraction',0) for s in samples)}))
     app.close()

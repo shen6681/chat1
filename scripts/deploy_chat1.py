@@ -5,7 +5,7 @@ import shutil
 from pathlib import Path
 
 
-root = Path(__file__).resolve().parent
+root = Path(__file__).resolve().parents[1]
 source = root / "dist"
 target = Path("D:/chat1")
 target.mkdir(exist_ok=True)
@@ -69,7 +69,6 @@ manifest["exe_file"]=release_executable.name
 """, encoding="utf-8-sig")
 preview=target/"界面预览";preview.mkdir(exist_ok=True)
 for name in ("v281-affinity-page.jpg","v281-dimensions-page.jpg"):
-    image=root/"assets"/name
-    if not image.exists():image=root/"assets"/"screenshots"/name
+    image=root/"docs"/"images"/name
     if image.is_file():shutil.copy2(image,preview/name)
 print(json.dumps({"folder": str(target), "version": "2.8.1", "files": sum(f.is_file() for f in target.rglob("*"))}, ensure_ascii=False))

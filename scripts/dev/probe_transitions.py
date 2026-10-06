@@ -5,6 +5,7 @@ import tempfile
 import time
 import tkinter as tk
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from chat_assistant.app import AssistantApp
 from chat_assistant.capture import enable_dpi_awareness
 from chat_assistant.storage import SettingsStore
@@ -35,5 +36,7 @@ with tempfile.TemporaryDirectory() as folder:
                 root.update();time.sleep(.005)
             records[-1]['animation_ms']=round((time.perf_counter()-t)*1000,2)
     app.close()
-    Path(sys.argv[1] if len(sys.argv)>1 else 'assets/transitions-after.json').write_text(json.dumps(records,ensure_ascii=False,indent=2),encoding='utf-8')
+    output = Path(sys.argv[1]) if len(sys.argv)>1 else Path(__file__).resolve().parents[2]/'verification-temp'/'transitions-after.json'
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(records,ensure_ascii=False,indent=2),encoding='utf-8')
     print(json.dumps(records,ensure_ascii=False))

@@ -28,7 +28,7 @@ def wechat_dialog(center):
         directory = tool_root()/"WeChatEXP"
         executable = directory/"wechat_exp_2.10.20260928.exe"
         if not executable.exists():
-            messagebox.showerror("缺少导出器", "请使用完整的 chat1 文件夹，WeChat EXP 应位于 tools/WeChatEXP。", parent=window)
+            messagebox.showerror("缺少导出器", "请将上游 WeChatEXP v2.10.20260928 的 EXE 放到 tools/WeChatEXP；源码安装说明见 third_party/README.md。", parent=window)
             return
         try:
             subprocess.Popen([str(executable)], cwd=str(directory), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
