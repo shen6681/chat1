@@ -1,5 +1,7 @@
 # Local runtime and personal data
 .venv/
+.runtime/
+tools/
 __pycache__/
 *.py[cod]
 build/
@@ -18,30 +20,3 @@ backups/
 verification-temp/
 待清理旧版/
 TASK_PROGRESS.md
-tools/QQChatExporter/**/config/
-tools/QQChatExporter/**/logs/
-
-# Pinned reference source archives are part of the source checkout.
-!tools/WeChatEXP/pc_wechat_exp-source-v2.10.20260928.zip
-!tools/QQNT_Export/QQNT_Export-source-v3.3.0.zip
-!tools/QQChatExporter-source-v6.3.0.zip
-!tools/NapCat-source-v4.18.19.zip
-# Preserve this build dependency already tracked in the upstream source tree.
-!tools/source/pc_wechat_exp-v2.10.20260928/tools/silk_decoder.exe
-# Public build settings and resources from QCE's pinned NapCat source reference.
-!tools/source/qq-chat-exporter-v6.3.0/plugins/qq-chat-exporter/.napcat-src/.env.framework
-!tools/source/qq-chat-exporter-v6.3.0/plugins/qq-chat-exporter/.napcat-src/.env.shell
-!tools/source/qq-chat-exporter-v6.3.0/plugins/qq-chat-exporter/.napcat-src/.env.shell-analysis
-!tools/source/qq-chat-exporter-v6.3.0/plugins/qq-chat-exporter/.napcat-src/.env.universal
-!tools/source/qq-chat-exporter-v6.3.0/plugins/qq-chat-exporter/.napcat-src/.vscode/settings.json
-!tools/source/qq-chat-exporter-v6.3.0/plugins/qq-chat-exporter/.napcat-src/external/LiteLoaderWrapper.zip
-!tools/source/qq-chat-exporter-v6.3.0/plugins/qq-chat-exporter/.napcat-src/launcher/NapCatWinBootMain.exe
-!tools/source/qq-chat-exporter-v6.3.0/plugins/qq-chat-exporter/.napcat-src/napcat.webui/.env
-!tools/source/qq-chat-exporter-v6.3.0/plugins/qq-chat-exporter/.napcat-src/src/native/pty/win32.x64/winpty-agent.exe
-# Public build settings and resources tracked by NapCat v4.18.19.
-!tools/source/NapCatQQ-v4.18.19/.vscode/settings.json
-!tools/source/NapCatQQ-v4.18.19/packages/napcat-napi-loader/napimain.exe
-!tools/source/NapCatQQ-v4.18.19/packages/napcat-shell-loader/NapCatWinBootMain.exe
-!tools/source/NapCatQQ-v4.18.19/packages/napcat-webui-frontend/.env
-!tools/source/NapCatQQ-v4.18.19/packages/napcat-develop/config/.env.example
-!tools/source/NapCatQQ-v4.18.19/packages/napcat-native/pty/win32.x64/winpty-agent.exe
