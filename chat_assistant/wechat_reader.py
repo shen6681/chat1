@@ -37,7 +37,7 @@ class ScopedWechatReader:
         if not self.backup.is_dir() or not account.get('wxid') or not account.get('db_path'):
             raise ValueError('请先完成所选账号的备份。')
         source=tool_root()/'WeChatEXP'/'wechat_exp_2.10.20260928.exe'
-        if not source.is_file(): raise ValueError('缺少官方微信工具，请使用完整便携包。')
+        if not source.is_file(): raise ValueError('缺少 WeChatEXP，请将上游 v2.10.20260928 的 EXE 放到 tools/WeChatEXP。源码安装说明见 third_party/README.md。')
         runtime=Path(directory)/'wechat-api-runtime'/'2.10.20260928';runtime.mkdir(parents=True,exist_ok=True)
         cached=runtime/source.name
         def digest(path):

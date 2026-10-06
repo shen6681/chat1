@@ -20,6 +20,6 @@ try {
 } finally { Pop-Location }
 & $taskPython -m PyInstaller --noconfirm ChatReplyAssistant.spec
 if ($LASTEXITCODE -ne 0) { throw 'Build failed.' }
-& $taskPython .\package_release.py
+& $taskPython .\scripts\package_release.py
 if ($LASTEXITCODE -ne 0) { throw 'Release packaging failed.' }
 Write-Output 'Ready: dist\ChatReplyAssistant.exe'

@@ -4,7 +4,7 @@ import json
 import urllib.request
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent / "assets" / "fonts"
+ROOT = Path(__file__).resolve().parents[1] / "assets" / "fonts"
 GOOGLE = "9710da1eacb3be272583c3224dcb70f9da6eadbb"
 
 

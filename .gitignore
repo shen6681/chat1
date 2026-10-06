@@ -1,5 +1,7 @@
 # Local runtime and personal data
 .venv/
+.runtime/
+tools/
 __pycache__/
 *.py[cod]
 build/
@@ -18,5 +20,3 @@ backups/
 verification-temp/
 待清理旧版/
 TASK_PROGRESS.md
-tools/QQChatExporter/**/config/
-tools/QQChatExporter/**/logs/

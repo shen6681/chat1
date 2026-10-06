@@ -76,7 +76,7 @@ class QQExportDialog:
         self.offline_button=button(row,"导出私聊 JSON",self.offline_export,True);self.offline_button.pack(side="left")
         button(row,"数据库准备说明",lambda:webbrowser.open("https://qqbackup.github.io/QQDecrypt/"),padx=10).pack(side="left",padx=8)
         button(row,"导入已有 JSON",lambda:(self.close(),center.pick_file()),padx=10).pack(side="left")
-        self.offline_note=tk.StringVar(value="附带 QQNT_Export v3.3.0（上游预发布版），独立运行。建议选择已解密的数据库副本，导出文件会保存在上方目录。")
+        self.offline_note=tk.StringVar(value="使用本机 QQNT_Export v3.3.0（上游预发布版）。建议选择已解密的数据库副本，导出文件会保存在上方目录。")
         tk.Label(offline,textvariable=self.offline_note,bg=BG,fg=MUTED,font=("Microsoft YaHei UI",10),anchor="nw",justify="left",padx=14,pady=14,wraplength=780).pack(fill="both",expand=True,pady=(18,0))
         self.window.after(100,self.poll)
 

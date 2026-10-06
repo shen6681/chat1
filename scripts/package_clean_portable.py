@@ -9,7 +9,7 @@ import stat
 import zipfile
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parents[1]
 DEPLOYED = Path("D:/chat1")
 OUTPUT = Path(os.environ.get('CHAT1_PACKAGE_OUTPUT',"D:/chat1_便携版"))
 ZIP = OUTPUT.with_suffix(".zip")
@@ -79,17 +79,19 @@ def main():
         for name in files:
             copy_file(folder/name, Path("tools")/tool/name)
 
-    manifest = json.loads((ROOT/"dist"/"tools"/"provenance.json").read_text(encoding="utf-8"))
-    for item in manifest:
-        original = ROOT/"tools"/item["file"]
-        if sha256(original) != item["sha256"]:
-            raise ValueError("Original connector/source archive hash mismatch")
-        if item["file"] == "QQChatExporter-v6.3.0.zip":
-            extract_checked(original, OUTPUT/"tools"/"QQChatExporter")
-        else:
-            copy_file(original, Path("tools")/"source"/item["file"])
-    copy_file(ROOT/"dist"/"tools"/"provenance.json", "tools/provenance.json")
-    shutil.copytree(ROOT/"dist"/"tools"/"licenses", OUTPUT/"tools"/"licenses")
+    connector_manifest = ROOT/"dist"/"tools"/"provenance.json"
+    if connector_manifest.is_file():
+        manifest = json.loads(connector_manifest.read_text(encoding="utf-8"))
+        for item in manifest:
+            original = ROOT/"tools"/item["file"]
+            if sha256(original) != item["sha256"]:
+                raise ValueError("Original connector/source archive hash mismatch")
+            if item["file"] == "QQChatExporter-v6.3.0.zip":
+                extract_checked(original, OUTPUT/"tools"/"QQChatExporter")
+            else:
+                copy_file(original, Path("tools")/"source"/item["file"])
+        copy_file(connector_manifest, "tools/provenance.json")
+        shutil.copytree(ROOT/"dist"/"tools"/"licenses", OUTPUT/"tools"/"licenses")
     copy_file(ROOT/"HELPER_TOOLS.md", "tools/README.md")
 
     guide = """聊有据 2.8.1 · Windows 便携版
@@ -125,9 +127,9 @@ def main():
 退出程序：Ctrl+K → 退出程序。只关闭浏览器不会停止本机服务。
 
 三、QQ / 微信导出
-QQ：先安装并登录自己的 QQNT。附带连接器是原始干净发行文件，没有打包作者的登录配置。
+QQ：先安装并登录自己的 QQNT。连接器可自行安装，包内如有连接器也不包含打包作者的登录配置。
 按QQ导出中心内嵌说明启用本机 OneBot HTTP 服务、设置自己的 Token，再加载好友和读取私聊。
-已有 NapCat / LLOneBot 时可直接使用，不必再次启动附带连接器。
+已有 NapCat / LLOneBot 时可直接使用。
 QQNT数据库导出器处理已解密副本，原始加密数据库需要先准备解密副本。
 微信：先登录自己的微信，在导入中心使用一键向导。备份目录、文字导出目录必须自己分别选择，无默认地址。选账号备份、选私聊提取文字、确认身份后保存；也可直接打开WeChatEXP仪表盘。
 推荐 ChatLab JSONL / JSON，TXT / 聊天 HTML 也可导入。导出器配置与备份由各自工具保存。
@@ -145,7 +147,7 @@ API Key 用当前 Windows 用户的 DPAPI 加密；聊天文字、评分及续�
 
 五、离线检查和文件说明
 可双击“离线自检.cmd”检查内置 OCR、Windows密钥加密和聊天档案检查点，使用合成数据且不联网。
-ChatReplyAssistant.exe：主程序；tools：导出器、QQ连接器及必要的对应源码；licenses：依赖许可。
+ChatReplyAssistant.exe：主程序；tools：本次打包的导出器及可选 QQ 连接器；licenses：依赖许可。
 VERSION.json：版本；文件清单.json：逐文件SHA256；THIRD_PARTY_NOTICES.md：第三方说明。
 第三方工具保留对应源码和许可，助手的MIT许可不替代它们。WeChatEXP上游该版本未声明许可证，
 不要由此推定任意商业分发权，详见 tools/README.md。第三方账号均由使用者本人配置。

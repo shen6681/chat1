@@ -4,11 +4,11 @@
 
 完整解压 `chat1-v2.8.1-windows-x64.zip`，双击 **启动程序.cmd**。无需安装 Python 或 Node.js。默认在浏览器本机端口打开共创者 Yangfan Hu 提交的新版 UI，本机服务只监听 127.0.0.1。无需 WebView2 窗口即可使用完整网页工作台。聊天、评分和设置与原生程序共用，保留已有档案和 Windows DPAPI 密钥。
 
-![新版工作台（合成测试文字）](assets/screenshots/v281-affinity-page.jpg)
+![新版工作台（合成测试文字）](docs/images/v281-affinity-page.jpg)
 
-![六维互动独立页面（合成数据）](assets/screenshots/v281-dimensions-page.jpg)
+![六维互动独立页面（合成数据）](docs/images/v281-dimensions-page.jpg)
 
-![微信一键导入](assets/screenshots/v28-wechat.jpg)
+![微信一键导入](docs/images/v28-wechat.jpg)
 
 ## 三步开始
 
@@ -58,7 +58,7 @@ Python环境安装见下文。仓库已附编译后的 `web/dist`，可运行 `p
 
 为防止上游备份 API 切换目录后保留旧账号状态，备份结果必须匹配所选账号；消息读取使用独立的官方 serve 进程和只含本次目录、账号的隔离配置。原导出工具的密钥、登录配置不复制或修改。备份期间不要在仪表盘启动另一个备份；应用内同时只允许一个微信导入任务。微信备份由工具执行，助手导入阶段只处理文字。
 
-工具目录包含未修改的官方 EXE、同版本源码 ZIP、上游说明和来源哈希。该版本上游没有声明许可证，助手的 MIT 许可不覆盖这个独立工具，详情见 `tools/README.md`。已解密数据库仍可使用只读 SQLite 导入；已有 WeFlow 用户可以用兼容入口连接 `http://127.0.0.1:5031`。
+源码仓库不包含第三方导出工具。自行下载后按 [工具安装说明](third_party/README.md) 放在本机 `tools/`，该目录不会提交到 Git。WeChatEXP 该版本上游没有声明许可证，助手的 MIT 许可不覆盖它。已解密数据库仍可使用只读 SQLite 导入；已有 WeFlow 用户可以用兼容入口连接 `http://127.0.0.1:5031`。
 
 ## 时间范围、逐条评分与续做
 
@@ -93,7 +93,7 @@ DeepSeek 结合双方全部文字给出 −10 至 +10 的原始变化、模型�
 
 **在线读取 QQ 记录（没有已解密数据库时使用）：**
 
-1. 已有 NapCat / LLOneBot 时使用原有连接器；否则点击“打开 QQ 连接器”，按其提示配置本机 QQNT 并登录。附带旧工具中的 NapCat 仅作为连接器使用，导出由助手完成。
+1. 已有 NapCat / LLOneBot 时使用原有连接器；否则自行安装连接器，点击“打开 QQ 连接器”可尝试启动本机 `tools/QQChatExporter` 下的启动脚本。连接器只提供记录接口，导出由助手完成。
 2. 在连接器管理页的网络配置中，新建并启用 **HTTP 服务端**，监听地址 `127.0.0.1`、端口 `3000`，设置 HTTP Token。也可以使用其他本机端口。
 3. 回到导出中心，填写 `http://127.0.0.1:3000` 和相同的 HTTP Token，点击“连接并加载好友”。这里需要的是 OneBot HTTP 接口；NapCat WebUI 通常使用 `6099`，WebUI 登录密码与 HTTP Token 也是两个设置。
 4. 选择一个好友，点击“读取所选聊天”。然后“另存为 JSON”，或“预览并导入存档”，确认哪位是我再保存。读取不会自动调用模型。
@@ -108,7 +108,7 @@ DeepSeek 结合双方全部文字给出 −10 至 +10 的原始变化、模型�
 
 本程序不提取 QQ 数据库密钥、不解密原始数据库。加密 `nt_msg.db` 会在启动导出器之前被拒绝；可查看 [QQDecrypt 数据库准备文档](https://qqbackup.github.io/QQDecrypt/)，或使用在线读取页。不同数据库版本可能需要上游适配。
 
-新导出器、对应源码、GPL-3.0 许可证、下载来源与 SHA256 在 `tools/QQNT_Export`。附带连接器的原始文件、源码和许可保留在 `tools/QQChatExporter`、`tools/source`、`tools/licenses`。详情见 `tools/README.md`。升级保留当前连接器配置、API 设置与已有联系人档案。
+从源码运行时需自行安装 QQNT_Export；下载地址、放置路径和校验值见 [工具安装说明](third_party/README.md)。已有连接器仍可使用。升级保留当前连接器配置、API 设置与已有联系人档案。
 
 ## 支持的模型
 
@@ -169,7 +169,7 @@ API 请求使用本地 mock 服务，**没有用真实账号调用 DeepSeek、Ty
 
 ## 从源码运行 / 打包
 
-推荐 Python 3.12，Windows x64。首次运行：
+推荐 Python 3.12，Windows x64。导出器需要先按 [本机工具安装说明](third_party/README.md) 放入 `tools/`；普通文件导入、在线 QQ 读取和分析功能不依赖这两个 EXE。首次运行：
 
 ```powershell
 Set-Location D:\ChatReplyAssistant
@@ -190,6 +190,8 @@ powershell -ExecutionPolicy Bypass -File .\build.ps1
 Start-Process -FilePath .\dist\ChatReplyAssistant.exe -ArgumentList '--self-test', 'self-test.json' -WindowStyle Hidden -Wait
 Get-Content .\self-test.json
 ```
+
+仓库目录：`chat_assistant/` 是 Python 应用，`web/` 是前端，`tests/` 是测试，`assets/` 只放运行资源，`docs/images/` 放文档截图，`scripts/` 放构建与维护脚本，`third_party/` 只记录工具安装信息。`tools/`、`.runtime/` 和 `.venv/` 是本机目录，不提交到 Git。版本测试记录由 CI 或发行附件保存，不进入源码目录。
 
 ## 参考
 

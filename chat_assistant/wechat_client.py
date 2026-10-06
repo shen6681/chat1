@@ -91,7 +91,7 @@ def ensure_wechat(client):
     if client.ready(): return
     from .qq_export import tool_root
     directory=tool_root()/'WeChatEXP';exe=directory/'wechat_exp_2.10.20260928.exe'
-    if not exe.is_file(): raise ValueError('缺少 WeChatEXP，请使用完整便携文件夹。')
+    if not exe.is_file(): raise ValueError('缺少 WeChatEXP，请将上游 v2.10.20260928 的 EXE 放到 tools/WeChatEXP。源码安装说明见 third_party/README.md。')
     subprocess.Popen([str(exe)],cwd=str(directory),stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,
                      creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
     for _ in range(60):

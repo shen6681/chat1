@@ -117,7 +117,7 @@ def export_plain_database(database_directory: Path, output: Path, qq_numbers="")
     ids=[v for v in re.split(r"[\s,，]+",qq_numbers.strip()) if v]
     if any(not v.isdigit() for v in ids):raise ValueError("QQ 号筛选只接受数字，多个 QQ 号用逗号分隔。")
     exe=tool_root()/"QQNT_Export"/"QQNT_Export_3.3.0.exe"
-    if not exe.is_file():raise ValueError("缺少 QQNT_Export 程序，请重新解压完整 chat1 文件夹。")
+    if not exe.is_file():raise ValueError("缺少 QQNT_Export 程序，请将上游 v3.3.0 的 EXE 放到 tools/QQNT_Export。源码安装说明见 third_party/README.md。")
     output.mkdir(parents=True,exist_ok=True)
     config=output/"export-config.toml"
     config.write_text("\n".join(["db_path = "+json.dumps(str(database_directory)),"pic_path = \"\"","output_path = "+json.dumps(str(output)),"c2c_filters = "+json.dumps([int(v) for v in ids]),"group_filters = []","conversation_types = [\"c2c\"]","output_format = [\"chatlab_json\"]","copy_resources = false"]),encoding="utf-8")

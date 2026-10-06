@@ -73,15 +73,18 @@ def main():
         report["no_shared_api_settings"]=not (data/"settings.json").exists()
         report["no_python_required"]=True
         # Both helpers and the launcher's expected paths remain valid after moving the package.
-        required=("tools/WeChatEXP/wechat_exp_2.10.20260928.exe","tools/QQNT_Export/QQNT_Export_3.3.0.exe",
-                  "tools/QQChatExporter/NapCat-QCE-Windows-x64/launcher-user.bat")
+        required=("tools/WeChatEXP/wechat_exp_2.10.20260928.exe","tools/QQNT_Export/QQNT_Export_3.3.0.exe")
         report["exporter_paths_exist"]=all((package/name).is_file() for name in required)
         report["ok"]=all(report[k] for k in ("manifest_hashes","fresh_profile_empty","no_shared_api_settings","exporter_paths_exist"))
         if not report["ok"]:
             raise ValueError("Portable-package verification failed")
-        shutil.copy2(snapshot,ROOT/"assets"/"portable-clean-startup.png")
+        output = ROOT / "verification-temp"
+        output.mkdir(exist_ok=True)
+        shutil.copy2(snapshot, output / "portable-clean-startup.png")
     finally:
-        (ROOT/"assets"/"portable-clean-verification.json").write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding="utf-8")
+        output = ROOT / "verification-temp"
+        output.mkdir(exist_ok=True)
+        (output / "portable-clean-verification.json").write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding="utf-8")
         # Only the newly created task-owned directory is cleaned up.
         if work.is_relative_to(parent) and work.name.startswith("portable-"):
             for attempt in range(5):
