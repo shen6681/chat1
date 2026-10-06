@@ -18,7 +18,7 @@ try {
     & npm.cmd run build
     if ($LASTEXITCODE -ne 0) { throw 'Frontend build failed.' }
 } finally { Pop-Location }
-& $taskPython -m PyInstaller --noconfirm ChatReplyAssistant.spec
+& $taskPython -m PyInstaller --noconfirm .\scripts\packaging\ChatReplyAssistant.spec
 if ($LASTEXITCODE -ne 0) { throw 'Build failed.' }
 & $taskPython .\scripts\package_release.py
 if ($LASTEXITCODE -ne 0) { throw 'Release packaging failed.' }
