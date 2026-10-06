@@ -1,10 +1,12 @@
 # -*- mode: python ; coding: utf-8 -*-
+from pathlib import Path
 from PyInstaller.utils.hooks import collect_data_files
 from PyInstaller.utils.hooks import collect_dynamic_libs
 from PyInstaller.utils.hooks import collect_all
 
+project_root = Path(SPEC).resolve().parents[2]
 datas = []
-datas += [('web/dist', 'web/dist')]
+datas += [(str(project_root / 'web' / 'dist'), 'web/dist')]
 binaries = []
 hiddenimports = []
 for package in ('webview','pythonnet','clr_loader'):
@@ -12,7 +14,7 @@ for package in ('webview','pythonnet','clr_loader'):
     binaries += collect_dynamic_libs(package)
 hiddenimports += ['webview.platforms.winforms','webview.platforms.edgechromium',
                   'clr','pythonnet','clr_loader','_cffi_backend']
-datas += [('assets/icon.ico','assets')]
+datas += [(str(project_root / 'assets' / 'icon.ico'),'assets')]
 datas += collect_data_files('onnxruntime')
 binaries += collect_dynamic_libs('onnxruntime')
 tmp_ret = collect_all('rapidocr_onnxruntime')
@@ -20,8 +22,8 @@ datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
 
 a = Analysis(
-    ['main.py'],
-    pathex=[],
+    [str(project_root / 'main.py')],
+    pathex=[str(project_root)],
     binaries=binaries,
     datas=datas,
     hiddenimports=hiddenimports,
@@ -54,5 +56,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['assets\\icon.ico'],
+    icon=[str(project_root / 'assets' / 'icon.ico')],
 )

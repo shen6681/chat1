@@ -60,7 +60,8 @@ if (tool_source / "QQChatExporter").exists():
         file = tool_source / name
         manifests.append({"file": name, "upstream_url": url, "sha256": hashlib.sha256(file.read_bytes()).hexdigest(), "size": file.stat().st_size, "modified": False})
     (tool_dist / "provenance.json").write_text(json.dumps(manifests, indent=2), encoding="utf-8")
-    shutil.copy2(root / "HELPER_TOOLS.md", tool_dist / "README.md")
+if tool_dist.exists():
+    shutil.copy2(root / "third_party" / "HELPER_TOOLS.md", tool_dist / "README.md")
 source_output = dist_root / "source"
 source_output.mkdir(exist_ok=True)
 with zipfile.ZipFile(source_output / "ChatReplyAssistant-source-v2.8.1.zip", "w", zipfile.ZIP_DEFLATED) as archive:

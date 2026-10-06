@@ -1,6 +1,6 @@
 # 聊有据 · QQ / 微信回复助手
 
-[下载 Windows 便携版 v2.8.1](https://github.com/shen6681/chat1/releases/tag/v2.8.1) · [发布说明](RELEASE_NOTES.md)
+[下载 Windows 便携版 v2.8.1](https://github.com/shen6681/chat1/releases/tag/v2.8.1) · [发布说明](docs/releases/v2.8.1.md)
 
 完整解压 `chat1-v2.8.1-windows-x64.zip`，双击 **启动程序.cmd**。无需安装 Python 或 Node.js。默认在浏览器本机端口打开共创者 Yangfan Hu 提交的新版 UI，本机服务只监听 127.0.0.1。无需 WebView2 窗口即可使用完整网页工作台。聊天、评分和设置与原生程序共用，保留已有档案和 Windows DPAPI 密钥。
 
@@ -40,7 +40,7 @@ Jev / 组合模式由 Jev 批量评分，DeepSeek 按需解释或生成回复。
 
 Python环境安装见下文。仓库已附编译后的 `web/dist`，可运行 `python main.py` 默认打开浏览器；`--native` 为可选 WebView2 窗口；`--desktop` 打开兼容的原 Tk 工具。
 
-修改前端后，在 `web` 运行 `npm ci --ignore-scripts`、`npm test`、`npm run build`，再运行 Python 服务。单独启动 Vite 仅供界面开发，真实功能通过 Python 提供的会话令牌API运行。Windows构建脚本会测试并编译前端，再使用 `ChatReplyAssistant.spec` 将前端一并封装进EXE。
+修改前端后，在 `web` 运行 `npm ci --ignore-scripts`、`npm test`、`npm run build`，再运行 Python 服务。单独启动 Vite 仅供界面开发，真实功能通过 Python 提供的会话令牌API运行。Windows构建脚本会测试并编译前端，再使用 `scripts/packaging/ChatReplyAssistant.spec` 将前端一并封装进EXE。
 
 ## 两种工作模式
 

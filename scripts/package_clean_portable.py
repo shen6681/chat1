@@ -92,7 +92,7 @@ def main():
                 copy_file(original, Path("tools")/"source"/item["file"])
         copy_file(connector_manifest, "tools/provenance.json")
         shutil.copytree(ROOT/"dist"/"tools"/"licenses", OUTPUT/"tools"/"licenses")
-    copy_file(ROOT/"HELPER_TOOLS.md", "tools/README.md")
+    copy_file(ROOT/"third_party"/"HELPER_TOOLS.md", "tools/README.md")
 
     guide = """聊有据 2.8.1 · Windows 便携版
 
