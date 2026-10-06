@@ -131,6 +131,19 @@ class ArchiveStore:
                 return profile
         raise ValueError("联系人档案不存在，请重新选择。")
 
+    def delete(self, identity: str) -> None:
+        with self.connection() as db:
+            db.execute("BEGIN IMMEDIATE")
+            if not db.execute("SELECT 1 FROM profiles WHERE id=?", (identity,)).fetchone():
+                raise ValueError("联系人档案不存在，请重新选择。")
+            lease = db.execute("SELECT pid,expires FROM analysis_leases WHERE profile_id=?", (identity,)).fetchone()
+            if lease and lease["expires"] > time.time() and self._process_running(lease["pid"]):
+                raise ValueError("该联系人正在分析，请先等待或暂停任务。")
+            db.execute("DELETE FROM analysis_runs WHERE profile_id=?", (identity,))
+            db.execute("DELETE FROM messages WHERE profile_id=?", (identity,))
+            db.execute("DELETE FROM analysis_leases WHERE profile_id=?", (identity,))
+            db.execute("DELETE FROM profiles WHERE id=?", (identity,))
+
     def create(self, name, platform, conversation_key, self_identity) -> Profile:
         profile = Profile(uuid.uuid4().hex, name.strip() or "未命名会话", platform, conversation_key, self_identity)
         with self.connection() as db:

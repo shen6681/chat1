@@ -1,4 +1,5 @@
 import React, { useState, useRef, useLayoutEffect, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useApp } from "../context/AppContext";
 import {
   Users,
@@ -6,7 +7,8 @@ import {
   Plus,
   Sparkles,
   TrendingUp,
-  AlertCircle
+  AlertCircle,
+  Trash2
 } from "lucide-react";
 import { sound } from "../utils/sound";
 import { triggerRipple } from "../utils/ripple";
@@ -18,11 +20,25 @@ export const Sidebar: React.FC = () => {
     activeProfile,
     setActiveProfileId,
     setActiveTab,
-    setMobileView, showToast
+    setMobileView, showToast, deleteProfile
   } = useApp();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [platformFilter, setPlatformFilter] = useState<string>("all");
+  const [deletingProfileId, setDeletingProfileId] = useState<string | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const deletingProfile = profiles.find((p) => p.id === deletingProfileId);
+  const cancelDeleteRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    if (!deletingProfileId) return;
+    cancelDeleteRef.current?.focus();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !deleteBusy) setDeletingProfileId(null);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [deletingProfileId, deleteBusy]);
 
   const [gliderStyle, setGliderStyle] = useState({ left: 0, width: 0 });
   const filterRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
@@ -169,9 +185,18 @@ export const Sidebar: React.FC = () => {
                       <span className="font-medium text-xs text-neutral-900 dark:text-neutral-100 truncate">
                         {p.name}
                       </span>
-                      <span className="text-[10px] text-neutral-400 shrink-0 font-mono">
-                        {p.lastActive}
-                      </span>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <span className="text-[10px] text-neutral-400 font-mono">{p.lastActive}</span>
+                        <button
+                          type="button"
+                          aria-label={`删除联系人档案 ${p.name}`}
+                          title={`删除 ${p.name} 的档案`}
+                          onClick={(e) => { e.stopPropagation(); setDeletingProfileId(p.id); }}
+                          className="p-1 rounded text-neutral-400 hover:text-rose-600 hover:bg-rose-500/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-rose-500"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
 
                     <div className="flex items-center gap-1.5 text-[11px] text-neutral-500 dark:text-neutral-400 mb-1">
@@ -201,6 +226,25 @@ export const Sidebar: React.FC = () => {
           })
         )}
       </div>
+
+      {deletingProfile && createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <section role="alertdialog" aria-modal="true" aria-labelledby="delete-profile-title" aria-describedby="delete-profile-description" className="w-full max-w-sm rounded-xl bg-white dark:bg-[#151518] p-5 shadow-xl border border-black/10 dark:border-white/10 space-y-4">
+            <h2 id="delete-profile-title" className="text-base font-semibold">删除联系人档案？</h2>
+            <p id="delete-profile-description" className="text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed">
+              将永久删除「{deletingProfile.name}」的 {deletingProfile.messageCount} 条聊天记录及其评分、分析结果。此操作无法撤销。
+            </p>
+            <div className="flex justify-end gap-3">
+              <button ref={cancelDeleteRef} type="button" disabled={deleteBusy} onClick={() => setDeletingProfileId(null)} className="px-3 py-2 rounded-lg text-sm border border-black/10 dark:border-white/10 disabled:opacity-50">取消</button>
+              <button type="button" disabled={deleteBusy} onClick={async () => {
+                setDeleteBusy(true);
+                try { if (await deleteProfile(deletingProfile.id)) setDeletingProfileId(null); }
+                finally { setDeleteBusy(false); }
+              }} className="px-3 py-2 rounded-lg text-sm bg-rose-600 text-white disabled:opacity-50">{deleteBusy ? '删除中…' : '确认删除'}</button>
+            </div>
+          </section>
+        </div>, document.body
+      )}
 
       {/* Footer info */}
       <div className="p-3 border-t border-black/[0.05] dark:border-white/[0.06] text-[11px] text-neutral-400 flex items-center justify-between">

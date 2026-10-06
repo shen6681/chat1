@@ -203,12 +203,13 @@ class LocalService:
             raise ValueError('分析视角无效。')
         if kind in ('affinity', 'comprehensive') and body.get('calculate') is not True:
             raise ValueError('好感度不会自动计算，请主动选择计算后再开始。')
-        profile = str(body.get('profile','')); self.store.profile(profile)
+        profile = str(body.get('profile',''))
         if kind == 'comprehensive':
             affinity_store = self.self_affinity if perspective == 'self' else self.affinity
             if not affinity_store.view(profile)['comprehensiveReady']:
                 raise ValueError('全部聊天记录分析完成后才能开放综合分析。')
         with self.lock:
+            self.store.profile(profile)
             self._refresh_settings()
             if any(t['state']=='running' and t['profile']==profile for t in self.tasks.values()):
                 raise ValueError('当前联系人已有任务运行，请等待或暂停后再操作。')
@@ -291,6 +292,17 @@ class LocalService:
             task['thread']=thread; thread.start()
             return self.task_view(identity)
 
+    def delete_profile(self, body):
+        identity = body.get('id')
+        if not isinstance(identity, str) or not identity:
+            raise ValueError('请选择要删除的联系人档案。')
+        with self.lock:
+            if any(t['profile'] == identity and t['state'] == 'running' for t in self.tasks.values()):
+                raise ValueError('该联系人正在分析，请先等待或暂停任务。')
+            self.store.delete(identity)
+            self.tasks = {key: task for key, task in self.tasks.items() if task['profile'] != identity}
+        return {'deleted': identity}
+
     def native_workspace(self):
         with self.lock:
             if self.native is None or self.native.poll() is not None:
@@ -311,6 +323,7 @@ class LocalService:
 
     def post(self,route,body):
         if route=='/api/settings': return self.save_settings(body)
+        if route=='/api/profiles/delete': return self.delete_profile(body)
         if route=='/api/import/preview': return self.preview_import(body)
         if route=='/api/import/commit': return self.commit_import(body)
         if route.startswith('/api/jobs/') and route.rsplit('/',1)[-1] in ('score','explain','reply','affinity','comprehensive'):

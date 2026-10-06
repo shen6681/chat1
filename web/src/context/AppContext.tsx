@@ -41,7 +41,7 @@ interface AppContextType {
   triggerBatchAnalyze: (resume?: boolean) => Promise<void>; explainSelected: () => Promise<void>;
   generateReplies: () => Promise<void>; pauseJob: () => Promise<void>;
   reconnectJob: () => Promise<void>;
-  refreshProfiles: (select?: string) => Promise<void>;
+  refreshProfiles: (select?: string) => Promise<void>; deleteProfile: (id: string) => Promise<boolean>;
   toasts: ToastItem[]; showToast: (message: string, type?: ToastItem['type']) => void; dismissToast: (id: string) => void;
   startDate: string; endDate: string; setDateRange: (start: string, end: string) => void;
   page: number; setPage: (page: number) => void; total: number; lastRun: Page['lastRun']; job: Job | null;
@@ -104,6 +104,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const setActiveProfileId = (id: string) => {
     setProfileId(id); setPage(0); setStart(''); setEnd(''); setSelectedMessageId(null);
     setSelectedIds([]); setReplyAnalysis(null);
+  };
+  const deleteProfile = async (id: string): Promise<boolean> => {
+    try {
+      await api('/api/profiles/delete', { id });
+      setProfiles((current) => current.filter((profile) => profile.id !== id));
+      if (activeProfileId === id) setActiveProfileId('');
+      if (job?.profile === id) setJob(null);
+      showToast('联系人档案已删除。');
+      return true;
+    } catch (error) {
+      showToast(errorText(error), 'danger');
+      return false;
+    }
   };
   const setDateRange = (start: string, end: string) => {
     setStart(start); setEnd(end); setPage(0); setSelectedIds([]); setSelectedMessageId(null); setReplyAnalysis(null);
@@ -214,7 +227,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     explainSelected: () => runTask('explain', { ids: selectedIds.length ? selectedIds : selectedMessageId === null ? [] : [Number(selectedMessageId)] }),
     generateReplies: () => runTask('reply'), pauseJob: async () => { try { if (job) await api('/api/jobs/pause', { id: job.id }); } catch (error) { showToast(errorText(error), 'danger'); } },
     reconnectJob,
-    refreshProfiles, toasts, showToast, dismissToast: (id) => setToasts((prev) => prev.filter((t) => t.id !== id)),
+    refreshProfiles, deleteProfile, toasts, showToast, dismissToast: (id) => setToasts((prev) => prev.filter((t) => t.id !== id)),
     startDate, endDate, setDateRange, page, setPage, total: data?.total || 0, lastRun: data?.lastRun,
     job, ready, loadingMessages, guideStep, setGuideStep,
     finishGuide: async () => { if (await updateSettings({ guideDone: true })) setGuideStep(null); },
